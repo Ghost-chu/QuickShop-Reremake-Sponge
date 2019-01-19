@@ -1,5 +1,6 @@
 package org.maxgamer.quickshop;
 
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.maxgamer.quickshop.Command.QS;
 import org.maxgamer.quickshop.Command.Tab;
 import org.maxgamer.quickshop.Database.*;
@@ -18,8 +19,17 @@ import org.maxgamer.quickshop.Watcher.ItemWatcher;
 import org.maxgamer.quickshop.Watcher.LogWatcher;
 import org.maxgamer.quickshop.Watcher.UpdateWatcher;
 import org.slf4j.Logger;
+import org.spongepowered.api.Server;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.game.state.GameAboutToStartServerEvent;
+import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.plugin.Plugin;
+import org.spongepowered.api.world.World;
+import org.yaml.snakeyaml.Yaml;
+
+import ninja.leaping.configurate.yaml.YAMLConfigurationLoader;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,6 +41,8 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.Map.Entry;
+
+import javax.inject.Inject;
 @Plugin(id = "QuickShop", name = "QuickShop", version = "0.1", description = "QuickShop-Reremake", authors= {"Netherfoam", "Timtower", "KaiNoMood","Ghost_chu", "Mgazul"})
 public class QuickShop {
 	@Inject
@@ -81,14 +93,13 @@ public class QuickShop {
 	public boolean useSpout = false;
 	// private Metrics metrics;
 	QS commandExecutor =null;
-	public MultiverseCore mPlugin = null;
 	private int displayItemCheckTicks;
 	private boolean noopDisable;
 	private boolean setupDBonEnableding = false;
 	private String dbPrefix="";
 	private Tab commandTabCompleter;
 	private Metrics metrics;
-
+	private Configuration configuration;
 	/** 
 	 * Get the Player's Shop limit.
 	 * @return int Player's shop limit
@@ -102,50 +113,37 @@ public class QuickShop {
 		}
 		return max;
 	}
+	public Logger getLogger() {
+		return this.logger;
+	}
+	public Server getServer() {
+		return Sponge.getServer();
+	}
 	@Listener
 	public void onServerStart() {
 		instance = this;
+		configuration = new Configuration();
+		configuration.setupConfig();
 		getLogger().info("Quickshop Reremake by Ghost_chu(Minecraft SunnySide Server Community)");
 		getLogger().info("THIS VERSION ONLY SUPPORT BUKKIT API 1.13-1.13.x VERSION!");
 		getLogger().info("Author:Ghost_chu");
 		getLogger().info("Original author:Netherfoam, Timtower, KaiNoMood");
 		getLogger().info("Let's us start load plugin");
 		// NMS.init();
-		try {
-			getServer().spigot();
-		} catch (Exception e) {
-			getLogger().severe("FATAL: QSRR only can running on Spigot and Spigot's forks server!");
-			getServer().getPluginManager().disablePlugin(this);
-			return;
-		}
-		if (getServer().getName().toLowerCase().contains("catserver")) {
-			// Send FATAL ERROR TO CatServer's users.
-			getLogger().info("NOTICE: QSRR nolonger support CatServer ALERT!");
-			getLogger().info("NOTICE: From 1.3.1.9, QSRR already nolonger support CatServer");
-			getLogger().info("NOTICE: Cause this server have important license issues,");
-			getLogger().info("NOTICE: And to support Modded Bukkit Server is very hard.");
-			getLogger().info("NOTICE: So, QSRR will drop support for 1.12.2 Modded server.");
-			getLogger().info("NOTICE: SERVER WILL CONTINUE LOAD IN 60 SECONDS.");
-			try {
-				Thread.sleep(600000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-				Bukkit.getPluginManager().disablePlugin(this);
-			}
-		}
+		Sponge.getConfigManager().
 		saveDefaultConfig(); // Creates the config folder and copies config.yml
 								// (If one doesn't exist) as required.
 		reloadConfig(); // Reloads messages.yml too, aswell as config.yml and
 						// others.
 		getConfig().options().copyDefaults(true); // Load defaults.
 		if (Util.isDevEdition()) {
-			getLogger().severe("WARNING: You are running QSRR on dev-mode");
-			getLogger().severe("WARNING: Keep backup and DO NOT running on production environment!");
-			getLogger().severe("WARNING: Test version may destory anything!");
-			getLogger().severe(
+			getLogger().error("WARNING: You are running QSRR on dev-mode");
+			getLogger().error("WARNING: Keep backup and DO NOT running on production environment!");
+			getLogger().error("WARNING: Test version may destory anything!");
+			getLogger().error(
 					"WARNING: QSRR won't start without you confirm, nothing will changes before you turn on dev allowed.");
 			if (!getConfig().getBoolean("dev-mode")) {
-				getLogger().severe(
+				getLogger().error(
 						"WARNING: Set dev-mode: true in config.yml to allow qs load on dev mode(Maybe need add this line by your self).");
 				noopDisable = true;
 				Bukkit.getPluginManager().disablePlugin(this);
@@ -156,26 +154,26 @@ public class QuickShop {
 			return;
 		// ProtocolLib Support
 		// protocolManager = ProtocolLibrary.getProtocolManager();
-		try {
-			getServer().spigot();
-		} catch (Throwable e) {
-			getLogger().severe("You must use support Spigot or Spigot forks(eg.Paper) server not CraftBukkit");
-			Bukkit.getPluginManager().disablePlugin(this);
-			return;
-		}
-		if (getConfig().getBoolean("plugin.Multiverse-Core")) {
-			if (Bukkit.getPluginManager().getPlugin("Multiverse-Core") != null) {
-				mPlugin = (MultiverseCore) Bukkit.getPluginManager().getPlugin("Multiverse-Core");
-				getLogger().info("Successfully loaded MultiverseCore support!");
-			}
-		}
+//		try {
+//			getServer().spigot();
+//		} catch (Throwable e) {
+//			getLogger().error("You must use support Spigot or Spigot forks(eg.Paper) server not CraftBukkit");
+//			Bukkit.getPluginManager().disablePlugin(this);
+//			return;
+//		}
+//		if (getConfig().getBoolean("plugin.Multiverse-Core")) {
+//			if (Bukkit.getPluginManager().getPlugin("Multiverse-Core") != null) {
+//				mPlugin = (MultiverseCore) Bukkit.getPluginManager().getPlugin("Multiverse-Core");
+//				getLogger().info("Successfully loaded MultiverseCore support!");
+//			}
+//		}
 		// added for compatibility reasons with OpenInv - see
 		// https://github.com/KaiKikuchi/QuickShop/issues/139
-		if (getConfig().getBoolean("plugin.OpenInv")) {
-			this.openInvPlugin = Bukkit.getPluginManager().getPlugin("OpenInv");
-			if (this.openInvPlugin != null)
-				getLogger().info("Successfully loaded OpenInv support!");
-		}
+//		if (getConfig().getBoolean("plugin.OpenInv")) {
+//			this.openInvPlugin = Bukkit.getPluginManager().getPlugin("OpenInv");
+//			if (this.openInvPlugin != null)
+//				getLogger().info("Successfully loaded OpenInv support!");
+//		}
 		if (getConfig().getInt("config-version") == 0)
 			getConfig().set("config-version", 1);
 		updateConfig(getConfig().getInt("config-version"));
@@ -301,54 +299,54 @@ public class QuickShop {
 					count++;
 				} catch (Exception e) {
 					errors++;
-					getLogger().severe("Error loading a shop! Coords: Location[" + worldName + " (" + x + ", " + y
+					getLogger().error("Error loading a shop! Coords: Location[" + worldName + " (" + x + ", " + y
 							+ ", " + z + ")] Item: " + item.getType().name() + "...");
-					getLogger().severe("Are you deleted world included QuickShop shops? All shops will auto fixed.");
+					getLogger().error("Are you deleted world included QuickShop shops? All shops will auto fixed.");
 
-					getLogger().severe("===========Error Reporting Start===========");
-					getLogger().severe("#Java throw >>");
-					getLogger().severe("StackTrace:");
+					getLogger().error("===========Error Reporting Start===========");
+					getLogger().error("#Java throw >>");
+					getLogger().error("StackTrace:");
 					e.printStackTrace();
-					getLogger().severe("#Shop data >>");
-					getLogger().severe("Location: " + worldName + ";(X:" + x + ", Y:" + y + ", Z:" + z + ")");
-					getLogger().severe(
+					getLogger().error("#Shop data >>");
+					getLogger().error("Location: " + worldName + ";(X:" + x + ", Y:" + y + ", Z:" + z + ")");
+					getLogger().error(
 							"Item: " + item.getType().name() + " MetaData: " + item.getItemMeta().spigot().toString());
-					getLogger().severe("Owner: " + owner + "(" + ownerUUID.toString() + ")");
+					getLogger().error("Owner: " + owner + "(" + ownerUUID.toString() + ")");
 					try {
-						getLogger().severe(
+						getLogger().error(
 								"BukkitWorld: " + Bukkit.getWorld(worldName).getName() + " [" + worldName + "]");
 					} catch (Exception e2) {
-						getLogger().severe("BukkitWorld: WARNING:World not exist! [" + worldName + "]");
+						getLogger().error("BukkitWorld: WARNING:World not exist! [" + worldName + "]");
 					}
 					try {
-						getLogger().severe(
+						getLogger().error(
 								"Target Block: " + Bukkit.getWorld(worldName).getBlockAt(x, y, z).getType().name());
 					} catch (Exception e2) {
-						getLogger().severe("Target Block: Can't get block!");
+						getLogger().error("Target Block: Can't get block!");
 					}
-					getLogger().severe("#Database info >>");
+					getLogger().error("#Database info >>");
 
-					getLogger().severe("Connected:" + !getDB().getConnection().isClosed());
-					getLogger().severe("Read Only:" + getDB().getConnection().isReadOnly());
+					getLogger().error("Connected:" + !getDB().getConnection().isClosed());
+					getLogger().error("Read Only:" + getDB().getConnection().isReadOnly());
 
 					if (getDB().getConnection().getClientInfo() != null) {
-						getLogger().severe("Client Info: " + getDB().getConnection().getClientInfo().toString());
+						getLogger().error("Client Info: " + getDB().getConnection().getClientInfo().toString());
 					} else {
-						getLogger().severe("Client Info: null");
+						getLogger().error("Client Info: null");
 					}
-					getLogger().severe("Read Only:" + getDB().getConnection().isReadOnly());
+					getLogger().error("Read Only:" + getDB().getConnection().isReadOnly());
 
-					getLogger().severe("#Debuging >>");
-					getLogger().severe("Runnnig on step: " + step);
+					getLogger().error("#Debuging >>");
+					getLogger().error("Runnnig on step: " + step);
 
-					getLogger().severe("#Tips >>");
-					getLogger().severe("Please report this issues to author, And you database will auto backup!");
+					getLogger().error("#Tips >>");
+					getLogger().error("Please report this issues to author, And you database will auto backup!");
 
 					if (!isBackuped) {
 						File sqlfile = new File(Bukkit.getPluginManager().getPlugin("QuickShop").getDataFolder()
 								.getAbsolutePath().toString() + "/shop.db");
 						if (!sqlfile.exists()) {
-							getLogger().severe("Failed to backup! (File not found)");
+							getLogger().error("Failed to backup! (File not found)");
 						}
 						String uuid = UUID.randomUUID().toString().replaceAll("_", "");
 						File bksqlfile = new File(Bukkit.getPluginManager().getPlugin("QuickShop").getDataFolder()
@@ -372,14 +370,14 @@ public class QuickShop {
 							outputChannel = null;
 						}
 					}
-					getLogger().severe("===========Error Reporting End===========");
+					getLogger().error("===========Error Reporting End===========");
 
 					if (errors < 3) {
 						getLogger().info("Removeing shop from database...");
 						DatabaseHelper.removeShop(database, x, y, z, worldName);
 						getLogger().info("Trying keep loading...");
 					} else {
-						getLogger().severe(
+						getLogger().error(
 								"Multiple errors in shops - Something seems to be wrong with your shops database! Please check it out immediately!");
 						getLogger().info("Removeing shop from database...");
 						DatabaseHelper.removeShop(database, x, y, z, worldName);
@@ -389,7 +387,7 @@ public class QuickShop {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			getLogger().severe("Could not load shops Because SQLException.");
+			getLogger().error("Could not load shops Because SQLException.");
 		}
 		getLogger().info("Loaded " + count + " shops.");
 		
@@ -404,7 +402,7 @@ public class QuickShop {
 		commandTabCompleter = new Tab(this);
 		getCommand("qs").setTabCompleter(commandTabCompleter);
 		if (getConfig().getInt("shop.find-distance") > 100) {
-			getLogger().severe("Shop.find-distance is too high! It may cause lag! Pick a number under 100!");
+			getLogger().error("Shop.find-distance is too high! It may cause lag! Pick a number under 100!");
 		}
 		getLogger().info("Registering Listeners");
 		// Register events
@@ -585,20 +583,20 @@ public class QuickShop {
 		} catch (ConnectionException e) {
 			e.printStackTrace();
 			if (setupDBonEnableding) {
-				getLogger().severe("Error connecting to database. Aborting plugin load.");
+				getLogger().error("Error connecting to database. Aborting plugin load.");
 				getServer().getPluginManager().disablePlugin(this);
 			} else {
-				getLogger().severe("Error connecting to database.");
+				getLogger().error("Error connecting to database.");
 			}
 			return false;
 		} catch (SQLException e) {
 			e.printStackTrace();
 			getServer().getPluginManager().disablePlugin(this);
 			if (setupDBonEnableding) {
-				getLogger().severe("Error setting up database. Aborting plugin load.");
+				getLogger().error("Error setting up database. Aborting plugin load.");
 				getServer().getPluginManager().disablePlugin(this);
 			} else {
-				getLogger().severe("Error setting up database.");
+				getLogger().error("Error setting up database.");
 			}
 			return false;
 		}
@@ -743,9 +741,7 @@ public class QuickShop {
 
 	/** Reloads QuickShops config */
 	@Override
-	public void reloadConfig() {
-		super.reloadConfig();
-		// Load quick variables
+	public void reloadQSConfig() {
 		this.display = this.getConfig().getBoolean("shop.display-items");
 		this.sneak = this.getConfig().getBoolean("shop.sneak-only");
 		this.sneakCreate = this.getConfig().getBoolean("shop.sneak-to-create");
@@ -766,12 +762,12 @@ public class QuickShop {
 		try {
 			EconomyCore core = new Economy_Vault();
 			if (core == null || !core.isValid()) {
-				// getLogger().severe("Economy is not valid!");
-				getLogger().severe("QuickShop could not hook an economy/Not found Vault!");
-				getLogger().severe("QuickShop CANNOT start!");
+				// getLogger().error("Economy is not valid!");
+				getLogger().error("QuickShop could not hook an economy/Not found Vault!");
+				getLogger().error("QuickShop CANNOT start!");
 				this.getPluginLoader().disablePlugin(this);
 				// if(econ.equals("Vault"))
-				// getLogger().severe("(Does Vault have an Economy to hook into?!)");
+				// getLogger().error("(Does Vault have an Economy to hook into?!)");
 				return false;
 			} else {
 				this.economy = new Economy(core);
@@ -779,8 +775,8 @@ public class QuickShop {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			getLogger().severe("QuickShop could not hook an economy/Not found Vault!");
-			getLogger().severe("QuickShop CANNOT start!");
+			getLogger().error("QuickShop could not hook an economy/Not found Vault!");
+			getLogger().error("QuickShop CANNOT start!");
 			this.getPluginLoader().disablePlugin(this);
 			return false;
 		}
@@ -880,9 +876,9 @@ public class QuickShop {
 	public WorldListener getWorldListener() {
 		return worldListener;
 	}
-	public MultiverseCore getMVPlugin() {
-		return mPlugin;
-	}
+//	public MultiverseCore getMVPlugin() {
+//		return mPlugin;
+//	}
 	public Plugin getOpenInvPlugin() {
 		return openInvPlugin;
 	}
@@ -898,4 +894,14 @@ public class QuickShop {
     public Metrics getMetrics() {
 		return metrics;
 	}
+    public YamlConfiguration getConfig() {
+    	return configuration.getYamlConfiguration();
+    }
+    public void saveConfig() {
+    	configuration.save();
+    }
+    public void reloadConfig() {
+    	configuration.setupConfig();
+    	reloadQSConfig();
+    }
 }

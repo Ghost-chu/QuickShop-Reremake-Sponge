@@ -1,0 +1,14 @@
+[{
+    "modid": "QuickShop",
+    "name": "QuickShop",
+    "version": "0.1",
+    "description": "QuickShop-Reremake",
+    "authorList": [
+        "Netherfoam", 
+        "Timtower",
+        "KaiNoMood",
+        "Ghost_chu",
+        "Mgazul"
+    ],
+    "dependencies": []
+}]
