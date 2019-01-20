@@ -8,7 +8,11 @@ import org.maxgamer.quickshop.Shop.DisplayItem;
 import org.maxgamer.quickshop.Shop.Shop;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockState;
+import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.tileentity.Sign;
+import org.spongepowered.api.block.tileentity.TileEntity;
+import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.data.manipulator.mutable.tileentity.SignData;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.item.enchantment.Enchantment;
@@ -17,11 +21,15 @@ import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.Inventory;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.service.user.UserStorageService;
+import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.Color;
+import org.spongepowered.api.util.Direction;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
+import io.netty.handler.codec.base64.Base64Dialect;
 import net.minecraft.server.MinecraftServer;
+import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -133,6 +141,10 @@ public class Util {
 		Optional<UserStorageService> userStorage = Sponge.getServiceManager().provide(UserStorageService.class);
 		return userStorage.get().get(uuid);
 	}
+	public static Optional<User> getOfflinePlayer(String name) {
+		Optional<UserStorageService> userStorage = Sponge.getServiceManager().provide(UserStorageService.class);
+		return userStorage.get().get(name);
+	}
 
 	/**
 	 * Returns true if the given block could be used to make a shop out of.
@@ -141,19 +153,18 @@ public class Util {
 	 * @return True if it can be made into a shop, otherwise false.
 	 */
 	public static boolean canBeShop(BlockState b,UUID player, boolean onlyCheck) {
-		BlockState bs = b.getState();
-		if ((bs instanceof InventoryHolder == false) && b.getState().getType() != ItemType.ENDER_CHEST) {
+		if ((bs instanceof InventoryHolder == false) && b.getType() != BlockTypes.ENDER_CHEST) {
 			return false;
 		}
-		if (b.getState().getType() == ItemType.ENDER_CHEST) {
+		if (b.getType() == BlockTypes.ENDER_CHEST) {
 			if (plugin.openInvPlugin == null) {
 				Util.debugLog("OpenInv not loaded");
 				return false;
 			} else {
-				return shoppables.contains(bs.getType());
+				return shoppables.contains(b.getType());
 			}
 		}
-		return shoppables.contains(bs.getType());
+		return shoppables.contains(b.getType());
 
 	}
 
@@ -179,17 +190,17 @@ public class Util {
 	 *            The chest to check.
 	 * @return the block which is also a chest and connected to b.
 	 */
-	public static BlockState getSecondHalf(BlockState b) {
-		if (b.getType() != ItemTypes.CHEST && b.getType() != ItemTypes.TRAPPED_CHEST)
+	public static Location<World> getSecondHalf(Location<World> b) {
+		if (b.getBlockType() != ItemTypes.CHEST && b.getBlockType() != ItemTypes.TRAPPED_CHEST)
 			return null;
-		BlockState[] blocks = new BlockState[4];
-		blocks[0] = b.getRelative(1, 0, 0);
-		b.ge
-		blocks[1] = b.getRelative(-1, 0, 0);
-		blocks[2] = b.getRelative(0, 0, 1);
-		blocks[3] = b.getRelative(0, 0, -1);
-		for (BlockState c : blocks) {
-			if (c.getType() == b.getType()) {
+		@SuppressWarnings("unchecked")
+		Location<World>[] blocks = new Location[4];
+		blocks[0] = b.getRelative(Direction.EAST);
+		blocks[1] = b.getRelative(Direction.NORTH);
+		blocks[2] = b.getRelative(Direction.SOUTH);
+		blocks[3] = b.getRelative(Direction.WEST);
+		for (Location<World> c : blocks) {
+			if (c.getBlockType() == b.getBlockType()) {
 				return c;
 			}
 		}
@@ -205,21 +216,22 @@ public class Util {
 	 *            The player performing the action.
 	 * @return true if a nearby shop was found, false otherwise.
 	 */
-	public static boolean isOtherShopWithinHopperReach(BlockState b, Player p) {
+	public static boolean isOtherShopWithinHopperReach(Location<World> b, Player p) {
 		// Check 5 relative positions that can be affected by a hopper: behind, in front of, to the right,
 		// to the left and underneath.
-		BlockState[] blocks = new BlockState[5];
-		blocks[0] = b.getRelative(0, 0, -1);
-		blocks[1] = b.getRelative(0, 0, 1);
-		blocks[2] = b.getRelative(1, 0, 0);
-		blocks[3] = b.getRelative(-1, 0, 0);
-		blocks[4] = b.getRelative(0, 1, 0);
-		for (BlockState c : blocks) {
-			Shop firstShop = plugin.getShopManager().getShop(c.getLocation());
+		@SuppressWarnings("unchecked")
+		Location<World>[] blocks = new Location[5];
+		blocks[0] = b.getRelative(Direction.EAST);
+		blocks[1] = b.getRelative(Direction.NORTH);
+		blocks[2] = b.getRelative(Direction.SOUTH);
+		blocks[3] = b.getRelative(Direction.WEST);
+		blocks[4] = b.getRelative(Direction.UP);
+		for (Location<World> c : blocks) {
+			Shop firstShop = plugin.getShopManager().getShop(c);
 			// If firstShop is null but is container, it can be used to drain contents from a shop created
 			// on secondHalf.
-			BlockState secondHalf = getSecondHalf(c);
-			Shop secondShop = secondHalf == null ? null : plugin.getShopManager().getShop(secondHalf.getLocation());
+			Location<World> secondHalf = getSecondHalf(c);
+			Shop secondShop = secondHalf == null ? null : plugin.getShopManager().getShop(secondHalf);
 			if (firstShop != null && !p.getUniqueId().equals(firstShop.getOwner())
 					|| secondShop != null && !p.getUniqueId().equals(secondShop.getOwner())) {
 				return true;
@@ -247,6 +259,7 @@ public class Util {
 		YamlConfiguration cfg = new YamlConfiguration();
 		cfg.loadFromString(config);
 		cfg.getString("item");
+		/**Need upgrade to Sponge**/
 		ItemStack stack = cfg.getItemStack("item");
 		return stack;
 	}
@@ -300,7 +313,7 @@ public class Util {
 //		}
 		
 		ItemStack is = itemStack.copy();
-		is.setAmount(1);		
+		is.setQuantity(1);		
 		if(is.hasItemMeta()) {
 			if(is.getItemMeta().hasDisplayName()) {
 				return is.getItemMeta().getDisplayName();
@@ -372,6 +385,7 @@ public class Util {
 	 *         it doesn't.
 	 */
 	public static boolean isTool(ItemType mat) {
+		/**Need upgrade to Sponge API**/
 		if(mat.getMaxDurability()==0){
 			return false;
 		}else{
@@ -389,6 +403,7 @@ public class Util {
 	 * @return true if the itemstacks match. (ItemType, durability, enchants, name)
 	 */
 	public static boolean matches(ItemStack stack1, ItemStack stack2) {
+		/**Need upgrade to Sponge API**/
 		if (stack1 == stack2)
 			return true; // Referring to the same thing, or both are null.
 		if (stack1 == null || stack2 == null)
@@ -458,12 +473,11 @@ public class Util {
 	 *            The sign which is attached
 	 * @return The block the sign is attached to
 	 */
-	public static BlockState getAttached(BlockState b) {
+	public static Location<World> getAttached(Location<World> b) {
 		try {
-			Sign sign = (Sign) b.getState().getData(); // Throws a NPE
 			// sometimes??
-			BlockFace attached = sign.getAttachedFace();
-			if (attached == null)
+			Direction attached=b.get(Keys.DIRECTION).get();
+			if (attached == null || attached == Direction.NONE)
 				return null;
 			return b.getRelative(attached);
 		} catch (NullPointerException e) {
@@ -487,7 +501,7 @@ public class Util {
 			if (iStack == null)
 				continue;
 			if (Util.matches(item, iStack)) {
-				items += iStack.getAmount();
+				items += iStack.getQuantity();
 			}
 		}
 		Util.debugLog("Items: "+items);
@@ -510,10 +524,10 @@ public class Util {
 		try {
 			ItemStack[] contents = (ItemStack[])storageContents.invoke(inv);
 			for (ItemStack iStack : contents) {
-				if (iStack == null || iStack.getType() == ItemType.AIR) {
-					space += item.getMaxStackSize();
+				if (iStack == null || iStack.getType() == ItemTypes.AIR) {
+					space += item.getMaxStackQuantity();
 				} else if (matches(item, iStack)) {
-					space += item.getMaxStackSize() - iStack.getAmount();
+					space += item.getMaxStackQuantity() - iStack.getQuantity();
 				}
 			}
 		} catch (Exception e) {
@@ -530,9 +544,9 @@ public class Util {
 	 *            The location
 	 * @return true if the given location is loaded or not.
 	 */
-	public static boolean isLoaded(Location loc) {
+	public static boolean isLoaded(Location<World> loc) {
 		// plugin.getLogger().log(Level.WARNING, "Checking isLoaded(Location loc)");
-		if (loc.getWorld() == null) {
+		if (loc.getExtent() == null) {
 			// plugin.getLogger().log(Level.WARNING, "Is not loaded. (No world)");
 			return false;
 		}
@@ -540,7 +554,7 @@ public class Util {
 		// location rounded to the nearest 16.
 		int x = (int) Math.floor((loc.getBlockX()) / 16.0);
 		int z = (int) Math.floor((loc.getBlockZ()) / 16.0);
-		if (loc.getWorld().isChunkLoaded(x, z)) {
+		if (loc.getExtent().isChunkLoaded(x, z)) {
 			// plugin.getLogger().log(Level.WARNING, "Chunk is loaded " + x + ", " + z);
 			return true;
 		} else {
@@ -553,15 +567,15 @@ public class Util {
 	 * @param float yaw
 	 * @return BlockFace blockFace
 	 */
-	public static BlockFace getYawFace(float yaw) {
+	public static Direction getYawFace(float yaw) {
 		if (yaw > 315 && yaw <= 45) {
-			return BlockFace.NORTH;
+			return Direction.NORTH;
 		} else if (yaw > 45 && yaw <= 135) {
-			return BlockFace.EAST;
+			return Direction.EAST;
 		} else if (yaw > 135 && yaw <= 225) {
-			return BlockFace.SOUTH;
+			return Direction.SOUTH;
 		} else {
-			return BlockFace.WEST;
+			return Direction.WEST;
 		}
 	}
 	
@@ -584,9 +598,9 @@ public class Util {
 	 * @return
 	 */
 	public static void sendMessageToOps(String message) {
-		for (Player player : Bukkit.getOnlinePlayers()) {
-			if (player.isOp() || player.hasPermission("quickshop.alert")) {
-				player.sendMessage(message);
+		for (Player player : Sponge.getServer().getOnlinePlayers()) {
+			if (player.hasPermission("*") || player.hasPermission("quickshop.alert")) {
+				player.sendMessage(Text.of(message));
 			}
 		}
 	}
@@ -642,7 +656,7 @@ public class Util {
 			Itemlore = null;
 			Itemenchs = null;
 		}
-		if(Itemname!=MsgUtil.getItemi18n(itemStack.getType().name())) {
+		if(Itemname!=MsgUtil.getItemi18n(itemStack.getType().getName())) {
 			finalItemdata = Itemname+" "+Color.GRAY+"("+MsgUtil.getItemi18n(itemStack.getType().name())+Color.GRAY+")";
 		}else {
 			finalItemdata = Itemname;
@@ -664,7 +678,7 @@ public class Util {
 
 		if (Itemlore != null) {
 			for (String string : Itemlore) {
-				finalItemdata += Color.DARK_PURPLE +""+ Color.ITALIC + string + "\n";
+				finalItemdata += Color.DARK_MAGENTA +"" + string + "\n";
 			}
 		}
 		TextComponent normalmessage = new TextComponent(normalText+"   "+MsgUtil.getMessage("menu.preview"));
@@ -673,8 +687,8 @@ public class Util {
 		normalmessage.setHoverEvent(he);
 		player.spigot().sendMessage(normalmessage);
 		}catch (Exception e) {
-			player.sendMessage(normalText);
-			QuickShop.instance.getLogger().severe("QuickShop cannot send Advanced chat message, Are you using CraftBukkit? Please use Spigot or SpigotFork.");
+			player.sendMessage(Text.of(normalText));
+			QuickShop.instance.getLogger().error("QuickShop cannot send Advanced chat message, Are you using CraftBukkit? Please use Spigot or SpigotFork.");
 		}
 	}
 	private static String formatEnchLevel(Integer level) {

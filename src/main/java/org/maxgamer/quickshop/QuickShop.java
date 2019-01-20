@@ -2,6 +2,7 @@ package org.maxgamer.quickshop;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.scheduler.BukkitTask;
 import org.maxgamer.quickshop.Command.QS;
 import org.maxgamer.quickshop.Command.Tab;
 import org.maxgamer.quickshop.Database.*;
@@ -9,7 +10,6 @@ import org.maxgamer.quickshop.Database.Database.ConnectionException;
 import org.maxgamer.quickshop.Economy.Economy;
 import org.maxgamer.quickshop.Economy.EconomyCore;
 import org.maxgamer.quickshop.Economy.Economy_Sponge;
-import org.maxgamer.quickshop.Economy.Economy_Vault;
 import org.maxgamer.quickshop.Listeners.*;
 import org.maxgamer.quickshop.Shop.ContainerShop;
 import org.maxgamer.quickshop.Shop.Shop;
@@ -772,6 +772,7 @@ public class QuickShop {
 	public void onDisable() {
 	    if (noopDisable)
 	        return;
+		
 		if (itemWatcherTask != null) {
 			itemWatcherTask.cancel();
 		}

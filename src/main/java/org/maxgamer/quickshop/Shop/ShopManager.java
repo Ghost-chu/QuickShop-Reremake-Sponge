@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -14,8 +15,14 @@ import org.maxgamer.quickshop.Database.DatabaseHelper;
 import org.maxgamer.quickshop.Util.MsgUtil;
 import org.maxgamer.quickshop.Util.Util;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockType;
 import org.spongepowered.api.block.BlockTypes;
+import org.spongepowered.api.block.tileentity.Sign;
+import org.spongepowered.api.block.tileentity.TileEntity;
+import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.data.manipulator.mutable.block.DirectionalData;
+import org.spongepowered.api.data.manipulator.mutable.tileentity.SignData;
 import org.spongepowered.api.data.type.HandType;
 import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.living.player.Player;
@@ -28,9 +35,11 @@ import org.spongepowered.api.event.cause.EventContext;
 import org.spongepowered.api.event.cause.EventContextKey;
 import org.spongepowered.api.event.cause.EventContextKeys;
 import org.spongepowered.api.item.ItemType;
+import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.util.Direction;
 import org.spongepowered.api.world.Chunk;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -38,8 +47,8 @@ import org.spongepowered.api.world.World;
 public class ShopManager {
 	QuickShop plugin = QuickShop.instance;
 	private HashMap<UUID, Info> actions = new HashMap<UUID, Info>();
-	private HashMap<String, HashMap<ShopChunk, HashMap<Location<World>, Shop>>> shops = new HashMap<String, HashMap<ShopChunk, HashMap<Location, Shop>>>();
-	final private static ItemStack AIR = new ItemStack(ItemTypes.AIR);
+	private HashMap<String, HashMap<ShopChunk, HashMap<Location<World>, Shop>>> shops = new HashMap<String, HashMap<ShopChunk, HashMap<Location<World>, Shop>>>();
+	final private static ItemStack AIR = ItemStack.builder().itemType(ItemTypes.AIR).build();
 	
 
 	public ShopManager(QuickShop plugin) {
@@ -68,33 +77,30 @@ public class ShopManager {
 		ItemStack item = shop.getItem();
 		try {
 			// Write it to the database
-			DatabaseHelper.createShop(shop.getOwner().toString(), shop.getPrice(), item,  (shop.isUnlimited() ? 1 : 0), shop.getShopType().toID(), loc.getWorld().getName(), loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+			DatabaseHelper.createShop(shop.getOwner().toString(), shop.getPrice(), item,  (shop.isUnlimited() ? 1 : 0), shop.getShopType().toID(), loc.getExtent().getName(), loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
 			// Add it to the world
-			addShop(loc.getWorld().getName(), shop);
+			addShop(loc.getExtent().getName(), shop);
 		} catch (Exception error) {
 			error.printStackTrace();
-			plugin.getLogger().log(Level.WARNING, "Could not create shop! Changes will revert after a reboot!");
+			plugin.getLogger().warn( "Could not create shop! Changes will revert after a reboot!");
 		}
 		//Create sign
 		if (info.getSignBlock() != null && plugin.getConfig().getBoolean("shop.auto-sign")) {
-			ItemType signType = info.getSignBlock().getType();
+			BlockType signType = info.getSignBlock().getType();
 			if (signType != BlockTypes.AIR && signType !=BlockTypes.WATER) {
 				return;
 			}
-			boolean isWaterLogged = false;
-			if (info.getSignBlock().getType() == BlockTypes.WATER)
-				isWaterLogged = true;
-			final BlockState bs = info.getSignBlock().getState();
-			final BlockFace bf = info.getLocation().getBlock().getFace(info.getSignBlock());
-			bs.setType(BlockTypes.WALL_SIGN);
-			if (isWaterLogged) {
-				Waterlogged waterable = (Waterlogged) bs.getBlockData();
-				waterable.setWaterlogged(true); // Looks like sign directly put in water
-			}
-			Sign sign = (Sign) bs.getData();
-			sign.setFacingDirection(bf);
-			bs.setData(sign);
-			bs.update(true);
+			Optional<DirectionalData> optionalData = info.getLocation().get(DirectionalData.class);
+			DirectionalData data = optionalData.get();
+			data.get(Keys.DIRECTION).get();
+			
+			//final BlockFace bf = info.getLocation().getBlock().getFace(info.getSignBlock());
+			info.getLocation().setBlockType(BlockTypes.WALL_SIGN);
+			info.getLocation().getTileEntity().get();
+			//Direction.getClosestHorizontal(info.getLocation().getPosition());
+			info.getSignBlockLoc().setPosition(info.getLocation().getPosition());
+			//sign.setFacingDirection(bf);
+			//bs.update(true);
 			shop.setSignText();
 
 			/*
@@ -138,7 +144,7 @@ public class ShopManager {
 	 * 
 	 * @return a hashmap of World -> Chunk -> Shop
 	 */
-	public HashMap<String, HashMap<ShopChunk, HashMap<Location, Shop>>> getShops() {
+	public HashMap<String, HashMap<ShopChunk, HashMap<Location<World>, Shop>>> getShops() {
 		return this.shops;
 	}
 
@@ -150,7 +156,7 @@ public class ShopManager {
 	 *            shops from
 	 * @return a hashmap of Chunk -> Shop
 	 */
-	public HashMap<ShopChunk, HashMap<Location, Shop>> getShops(String world) {
+	public HashMap<ShopChunk, HashMap<Location<World>, Shop>> getShops(String world) {
 		return this.shops.get(world);
 	}
 
@@ -164,7 +170,7 @@ public class ShopManager {
 	 */
 	public HashMap<Location<World>, Shop> getShops(Chunk c) {
 		// long start = System.nanoTime();
-		HashMap<Location, Shop> shops = getShops(c.getWorld().getName(), c.getX(), c.getZ());
+		HashMap<Location<World>, Shop> shops = getShops(c.getWorld().getName(), c.getX(), c.getZ());
 		// long end = System.nanoTime();
 		// plugin.getLogger().log(Level.WARNING, "Chunk lookup in " + ((end - start)/1000000.0) +
 		// "ms.");
@@ -188,7 +194,7 @@ public class ShopManager {
 	 * @return The shop at that location
 	 */
 	public Shop getShop(Location<World> loc) {
-		HashMap<Location, Shop> inChunk = getShops(loc.getChunk());
+		HashMap<Location<World>, Shop> inChunk = getShops(loc.getChunk());
 		if (inChunk == null) {
 			return null;
 		}
@@ -210,10 +216,10 @@ public class ShopManager {
 			return;
 		}
 
-		HashMap<ShopChunk, HashMap<Location, Shop>> inWorld = this.getShops().get(world);
+		HashMap<ShopChunk, HashMap<Location<World>, Shop>> inWorld = this.getShops().get(world);
 		// There's no world storage yet. We need to create that hashmap.
 		if (inWorld == null) {
-			inWorld = new HashMap<ShopChunk, HashMap<Location, Shop>>(3);
+			inWorld = new HashMap<ShopChunk, HashMap<Location<World>, Shop>>(3);
 			// Put it in the data universe
 			this.getShops().put(world, inWorld);
 		}
@@ -223,10 +229,10 @@ public class ShopManager {
 		int z = (int) Math.floor((shop.getLocation().getBlockZ()) / 16.0);
 		// Get the chunk set from the world info
 		ShopChunk shopChunk = new ShopChunk(world, x, z);
-		HashMap<Location, Shop> inChunk = inWorld.get(shopChunk);
+		HashMap<Location<World>, Shop> inChunk = inWorld.get(shopChunk);
 		// That chunk data hasn't been created yet - Create it!
 		if (inChunk == null) {
-			inChunk = new HashMap<Location, Shop>(1);
+			inChunk = new HashMap<Location<World>, Shop>(1);
 			// Put it in the world
 			inWorld.put(shopChunk, inChunk);
 		}
@@ -246,11 +252,11 @@ public class ShopManager {
 		Bukkit.getPluginManager().callEvent(shopUnloadEvent);
 		Location<World> loc = shop.getLocation();
 		String world = loc.getWorld().getName();
-		HashMap<ShopChunk, HashMap<Location, Shop>> inWorld = this.getShops().get(world);
+		HashMap<ShopChunk, HashMap<Location<World>, Shop>> inWorld = this.getShops().get(world);
 		int x = (int) Math.floor((shop.getLocation().getBlockX()) / 16.0);
 		int z = (int) Math.floor((shop.getLocation().getBlockZ()) / 16.0);
 		ShopChunk shopChunk = new ShopChunk(world, x, z);
-		HashMap<Location, Shop> inChunk = inWorld.get(shopChunk);
+		HashMap<Location<World>, Shop> inChunk = inWorld.get(shopChunk);
 		inChunk.remove(loc);
 	}
 
@@ -262,7 +268,7 @@ public class ShopManager {
 		if (plugin.display) {
 			for (World world : Bukkit.getWorlds()) {
 				for (Chunk chunk : world.getLoadedChunks()) {
-					HashMap<Location, Shop> inChunk = this.getShops(chunk);
+					HashMap<Location<World>, Shop> inChunk = this.getShops(chunk);
 					if (inChunk == null)
 						continue;
 					for (Shop shop : inChunk.values()) {
@@ -285,7 +291,7 @@ public class ShopManager {
 	 *            The block to check
 	 * @return True if they're allowed to place a shop there.
 	 */
-	public boolean canBuildShop(Player p, Block b, BlockFace bf) {
+	public boolean canBuildShop(Player p, Location<World> b, Direction bf) {
 //		RegisteredListener openInvRegisteredListener = null; // added for compatibility reasons with OpenInv - see https://github.com/KaiKikuchi/QuickShop/issues/139
 //		try {
 //			if (plugin.openInvPlugin != null) {
@@ -302,8 +308,8 @@ public class ShopManager {
 			if (plugin.limit) {
 				int owned = 0;
 				if (!plugin.getConfig().getBoolean("limits.old-algorithm")) {
-					for (HashMap<ShopChunk, HashMap<Location, Shop>> shopmap : getShops().values()) {
-						for (HashMap<Location, Shop> shopLocs : shopmap.values()) {
+					for (HashMap<ShopChunk, HashMap<Location<World>, Shop>> shopmap : getShops().values()) {
+						for (HashMap<Location<World>, Shop> shopLocs : shopmap.values()) {
 							for (Shop shop : shopLocs.values()) {
 								if (shop.getOwner().equals(p.getUniqueId())&&!shop.isUnlimited()) {
 									owned++;
@@ -323,8 +329,9 @@ public class ShopManager {
 				int max = plugin.getShopLimit(p);
 				if (owned + 1 > max) {
 					//p.sendMessage(ChatColor.RED + "You have already created a maximum of " + owned + "/" + max + " shops!");
-					p.sendMessage(MsgUtil.getMessage("reached-maximum-can-create", String.valueOf(owned),String.valueOf(max)));
+					p.sendMessage(Text.of(MsgUtil.getMessage("reached-maximum-can-create", String.valueOf(owned),String.valueOf(max))));
 					return false;
+					
 				}
 			}
 			InteractBlockEvent interactBlockEvent = SpongeEventFactory.createInteractBlockEventPrimaryMainHand(Cause.builder().build(EventContext.empty()), HandTypes.MAIN_HAND, p, b, bf);
@@ -335,7 +342,7 @@ public class ShopManager {
 			if (interactBlockEvent.isCancelled()) {
 				return false;
 			}
-			ShopPreCreateEvent spce = new ShopPreCreateEvent(p, b.getLocation(),Cause.builder().build(EventContext.empty()));
+			ShopPreCreateEvent spce = new ShopPreCreateEvent(p, b,Cause.builder().build(EventContext.empty()));
 			Sponge.getEventManager().post(spce);
 			if (spce.isCancelled()) {
 				return false;
@@ -351,20 +358,17 @@ public class ShopManager {
 	public void handleChat(final Player p, String msg) {
 		final String message = ChatColor.stripColor(msg);
 		// Use from the main thread, because Bukkit hates life
-		Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-			@Override
-			public void run() {
 				HashMap<UUID, Info> actions = getActions();
 				// They wanted to do something.
 				Info info = actions.remove(p.getUniqueId());
 				if (info == null)
 					return; // multithreaded means this can happen
-				if (info.getLocation().getWorld() != p.getLocation().getWorld()) {
-					p.sendMessage(MsgUtil.getMessage("shop-creation-cancelled"));
+				if (info.getLocation().getExtent() != p.getLocation().getExtent()) {
+					p.sendMessage(Text.of(MsgUtil.getMessage("shop-creation-cancelled")));
 					return;
 				}
 				if (info.getLocation().distanceSquared(p.getLocation()) > 25) {
-					p.sendMessage(MsgUtil.getMessage("shop-creation-cancelled"));
+					p.sendMessage(Text.of(MsgUtil.getMessage("shop-creation-cancelled")));
 					return;
 				}
 				/* Creation handling */
@@ -379,8 +383,6 @@ public class ShopManager {
 					return; // It was cancelled, go away.
 				}
 			}
-		});
-	}
 	private void actionTrade(Player p, HashMap<UUID, Info> actions, Info info, String message) {
 		int amount = 0;
 		try {
@@ -462,7 +464,7 @@ public class ShopManager {
 					return;
 				}
 				if (tax != 0) {
-					plugin.getEcon().deposit(Bukkit.getOfflinePlayer(plugin.getConfig().getString("tax-account")).getUniqueId(), total * tax);
+					plugin.getEcon().deposit(Util.getOfflinePlayer(plugin.getConfig().getString("tax-account")).get().getUniqueId(), total * tax);
 				}
 			}
 			// Give them the money after we know we succeeded
@@ -540,7 +542,7 @@ public class ShopManager {
 				if (!shop.isUnlimited() || plugin.getConfig().getBoolean("shop.pay-unlimited-shop-owners")) {
 					plugin.getEcon().deposit(shop.getOwner(), total * (1 - tax));
 					if (tax != 0) {
-						plugin.getEcon().deposit(Bukkit.getOfflinePlayer(plugin.getConfig().getString("tax-account")).getUniqueId(), total * tax);
+						plugin.getEcon().deposit(Util.getOfflinePlayer(plugin.getConfig().getString("tax-account")).get().getUniqueId(), total * tax);
 					}
 				}
 				// Notify the shop owner
@@ -568,7 +570,7 @@ public class ShopManager {
 		try {
 			// Checking the shop can be created
 			Util.debugLog("calling for protection check...");
-			ChangeBlockEvent.Break be = SpongeEventFactory.createChangeBlockEventBreak(Cause.builder().append("QuickShop Protection Checking").build(EventContext.empty()), new List());
+			ChangeBlockEvent.Break be = SpongeEventFactory.createChangeBlockEventBreak(Cause.builder().append("QuickShop Protection Checking").build(EventContext.empty()), new ArrAList());
 			Sponge.getEventManager().post(be);
 			if (be.isCancelled()) {
 				p.sendMessage(Text.of(MsgUtil.getMessage("no-permission")));
@@ -587,7 +589,7 @@ public class ShopManager {
 				p.sendMessage(Text.of(MsgUtil.getMessage("chest-was-removed")));
 				return;
 			}
-			if (info.getLocation().getWorld().getBlockAt(info.getLocation()).getType() == BlockTypes.ENDER_CHEST) {
+			if (info.getLocation().getBlock().getType() == BlockTypes.ENDER_CHEST) {
 				if (!p.hasPermission("quickshop.create.enderchest"))
 					return;
 			}
@@ -640,11 +642,7 @@ public class ShopManager {
 					return;
 				}
 				try {
-					for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
-						if (player.getName().equals(plugin.getConfig().getString("tax-account"))) {
-							plugin.getEcon().deposit(player.getUniqueId(), tax);
-						}
-					}
+							plugin.getEcon().deposit(Util.getOfflinePlayer(plugin.getConfig().getString("tax-account")).get().getUniqueId(), tax);
 				} catch (Exception e2) {
 					e2.printStackTrace();
 					plugin.getLogger().warn(
@@ -655,7 +653,7 @@ public class ShopManager {
 			createShop(shop,info);
 			Location<World> loc = shop.getLocation();
 			plugin.log(p.getName() + " created a " + MsgUtil.getDisplayName(shop.getItem()) + " shop at ("
-					+ loc.getWorld().getName() + " - " + loc.getX() + "," + loc.getY() + "," + loc.getZ() + ")");
+					+ loc.getExtent().getName() + " - " + loc.getX() + "," + loc.getY() + "," + loc.getZ() + ")");
 			if (!plugin.getConfig().getBoolean("shop.lock")) {
 				// Warn them if they haven't been warned since
 				// reboot

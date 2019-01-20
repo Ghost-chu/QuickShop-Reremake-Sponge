@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.spongepowered.api.block.BlockState;
-import org.spongepowered.api.block.tileentity.Sign;
+import org.spongepowered.api.block.tileentity.TileEntity;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.world.Location;
@@ -59,7 +59,7 @@ public abstract interface Shop {
 
 	public abstract void setSignText(String[] paramArrayOfString);
 
-	public abstract List<Sign> getSigns();
+	public abstract List<TileEntity> getSigns();
 
 	public abstract boolean isAttached(BlockState paramBlock);
 

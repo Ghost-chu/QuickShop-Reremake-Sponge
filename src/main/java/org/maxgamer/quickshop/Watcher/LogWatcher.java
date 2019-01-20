@@ -7,15 +7,12 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 
-import org.bukkit.scheduler.BukkitTask;
 import org.maxgamer.quickshop.QuickShop;
 
 public class LogWatcher implements Runnable {
 	private PrintStream ps;
 	private ArrayList<String> logs = new ArrayList<String>(5);
-	public BukkitTask task;
-
-	public LogWatcher(QuickShop plugin, File log) {
+	public LogWatcher(QuickShop plugin, File log, int timewait) {
 		try {
 			if (!log.exists()) {
 				log.createNewFile();
@@ -24,11 +21,27 @@ public class LogWatcher implements Runnable {
 			this.ps = new PrintStream(fos);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
-			plugin.getLogger().severe("Log file not found!");
+			plugin.getLogger().error("Log file not found!");
 		} catch (IOException e) {
 			e.printStackTrace();
-			plugin.getLogger().severe("Could not create log file!");
+			plugin.getLogger().error("Could not create log file!");
 		}
+		ItemWatcher.timewait = (timewait/20)*1000;
+		new Runnable() {
+			
+			@Override
+			public void run() {
+				while (true) {
+					try {
+						Thread.sleep(timewait);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					this.run();
+				}
+			}
+		};
 	}
 
 	@Override

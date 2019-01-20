@@ -20,6 +20,7 @@ import org.maxgamer.quickshop.Shop.Shop;
 import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.effect.potion.PotionEffectType;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.enchantment.Enchantment;
 import org.spongepowered.api.item.inventory.ItemStack;
@@ -498,18 +499,18 @@ public class MsgUtil {
 	 *            The player to message
 	 * @return true if success, false if the player is offline or null
 	 */
-	public static boolean flush(OfflinePlayer p) {	//TODO Changed to UUID
+	public static boolean flush(User p) {	//TODO Changed to UUID
 		if (p != null && p.isOnline()) {
 			UUID pName = p.getUniqueId();
 			LinkedList<String> msgs = player_messages.get(pName);
 			if (msgs != null) {
 				for (String msg : msgs) {
-					p.getPlayer().sendMessage(msg);
+					p.getPlayer().get().sendMessage(Text.of(msg));
 				}
 				plugin.getDB().execute("DELETE FROM messages WHERE owner = ?", pName.toString());
 				msgs.clear();
 			}else {
-				p.getPlayer().sendMessage(getMessage("nothing-to-flush"));
+				p.getPlayer().get().sendMessage(Text.of(getMessage("nothing-to-flush")));
 			}
 			return true;
 		}
@@ -519,8 +520,8 @@ public class MsgUtil {
 	public static void sendShopInfo(Player p, Shop shop) {
 		// Potentially faster with an array?
 		ItemStack items = shop.getItem();
-		p.sendMessage(Text.of("");
-		p.sendMessage(Text.of("");
+		p.sendMessage(Text.of(""));
+		p.sendMessage(Text.of(""));
 		p.sendMessage(Text.of(Color.DARK_MAGENTA + "+---------------------------------------------------+"));
 		p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + MsgUtil.getMessage("menu.shop-information")));
 		p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + MsgUtil.getMessage("menu.owner", shop.ownerName())));

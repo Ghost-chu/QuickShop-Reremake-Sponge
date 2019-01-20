@@ -5,12 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.World;
 import org.maxgamer.quickshop.QuickShop;
 import org.maxgamer.quickshop.Shop.Shop;
 import org.maxgamer.quickshop.Shop.ShopChunk;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 /**
  * @author Netherfoam Maintains the display items, restoring them when needed.
@@ -18,20 +18,36 @@ import org.maxgamer.quickshop.Shop.ShopChunk;
  */
 public class ItemWatcher implements Runnable {
 	static QuickShop plugin = QuickShop.instance;
-
-	public ItemWatcher(QuickShop plugin) {
+	static int timewait = 0;
+	public ItemWatcher(QuickShop plugin, int timewait) {
 		ItemWatcher.plugin = plugin;
+		ItemWatcher.timewait = (timewait/20)*1000;
+		new Runnable() {
+			
+			@Override
+			public void run() {
+				while (true) {
+					try {
+						Thread.sleep(timewait);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					this.run();
+				}
+			}
+		};
 	}
 
 	public void run() {
 		List<Shop> toRemove = new ArrayList<Shop>(1);
-		for (Entry<String, HashMap<ShopChunk, HashMap<Location, Shop>>> inWorld : plugin.getShopManager().getShops().entrySet()) {
+		for (Entry<String, HashMap<ShopChunk, HashMap<Location<World>, Shop>>> inWorld : plugin.getShopManager().getShops().entrySet()) {
 			// This world
-			World world = Bukkit.getWorld(inWorld.getKey());
+			World world = Sponge.getServer().getWorld(inWorld.getKey()).get();
 			if (world == null)
 				continue; // world not loaded.
-			for (Entry<ShopChunk, HashMap<Location, Shop>> inChunk : inWorld.getValue().entrySet()) {
-				if (!world.isChunkLoaded(inChunk.getKey().getX(), inChunk.getKey().getZ())) {
+			for (Entry<ShopChunk, HashMap<Location<World>, Shop>> inChunk : inWorld.getValue().entrySet()) {
+				if (!world.getChunk(inChunk.getKey().getX(), 0, inChunk.getKey().getZ()).get().isLoaded()) {
 					// If the chunk is not loaded, next chunk!
 					continue;
 				}

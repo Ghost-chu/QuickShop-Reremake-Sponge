@@ -11,11 +11,13 @@ public class Info {
 	private ItemStack item;
 	private BlockState last;
 	private Shop shop;
+	private Location<World> lastloc;
 
-	public Info(Location<World> loc, ShopAction action, ItemStack item, BlockState last) {
+	public Info(Location<World> loc, ShopAction action, ItemStack item, BlockState last, Location<World> lastLoc) {
 		this.loc = loc;
 		this.action = action;
 		this.last = last;
+		this.lastloc = lastLoc;
 		if (item != null)
 			this.item = item.copy();
 	}
@@ -81,5 +83,8 @@ public class Info {
 	 * */
 	public BlockState getSignBlock() {
 		return this.last;
+	}
+	public Location<World> getSignBlockLoc() {
+		return lastloc;
 	}
 }

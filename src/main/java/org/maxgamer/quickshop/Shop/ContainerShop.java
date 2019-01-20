@@ -15,6 +15,8 @@ import org.maxgamer.quickshop.Util.Util;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.tileentity.Sign;
+import org.spongepowered.api.block.tileentity.TileEntity;
+import org.spongepowered.api.data.manipulator.mutable.tileentity.SignData;
 import org.spongepowered.api.entity.Item;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.item.ItemType;
@@ -22,6 +24,8 @@ import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.enchantment.Enchantment;
 import org.spongepowered.api.item.inventory.Inventory;
 import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.util.Direction;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -197,7 +201,7 @@ public class ContainerShop implements Shop {
 		int x = this.getLocation().getBlockX();
 		int y = this.getLocation().getBlockY();
 		int z = this.getLocation().getBlockZ();
-		String world = this.getLocation().getWorld().getName();
+		String world = this.getLocation().getExtent().getName();
 		int unlimited = this.isUnlimited() ? 1 : 0;
 		//String q = "UPDATE shops SET owner = ?, itemConfig = ?, unlimited = ?, type = ?, price = ? WHERE x = ? AND y = ? and z = ? and world = ?";
 		try {
@@ -274,9 +278,9 @@ public class ContainerShop implements Shop {
 		Inventory inv = this.getInventory();
 		int remains = amount;
 		while (remains > 0) {
-			int stackSize = Math.min(remains, item.getMaxStackSize());
-			item.setAmount(stackSize);
-			inv.removeItem(item);
+			int stackSize = Math.min(remains, item.getMaxStackQuantity());
+			item.setQuantity(stackSize);
+			inv.removeItem(item); /**How use Sponge to do this?**/
 			remains = remains - stackSize;
 		}
 	}
@@ -296,8 +300,8 @@ public class ContainerShop implements Shop {
 		Inventory inv = this.getInventory();
 		int remains = amount;
 		while (remains > 0) {
-			int stackSize = Math.min(remains, item.getMaxStackSize());
-			item.setAmount(stackSize);
+			int stackSize = Math.min(remains, item.getMaxStackQuantity());
+			item.setQuantity(stackSize);
 			inv.addItem(item);
 			remains = remains - stackSize;
 		}
@@ -319,10 +323,10 @@ public class ContainerShop implements Shop {
 		ArrayList<ItemStack> floor = new ArrayList<ItemStack>(5);
 		Inventory pInv = p.getInventory();
 		if (this.isUnlimited()) {
-			ItemStack item = this.item.clone();
+			ItemStack item = this.item.copy();
 			while (amount > 0) {
-				int stackSize = Math.min(amount, this.item.getMaxStackSize());
-				item.setAmount(stackSize);
+				int stackSize = Math.min(amount, this.item.getMaxStackQuantity());
+				item.setQuantity(stackSize);
 				pInv.addItem(item);
 				amount -= stackSize;
 			}
@@ -333,16 +337,16 @@ public class ContainerShop implements Shop {
 				ItemStack item = chestContents[i];
 				if (item != null && this.matches(item)) {
 					// Copy it, we don't want to interfere
-					item = item.clone();
+					item = item.copy();
 					// Amount = total, item.getAmount() = how many items in the
 					// stack
-					int stackSize = Math.min(amount, item.getAmount());
+					int stackSize = Math.min(amount, item.getQuantity());
 					// If Amount is item.getAmount(), then this sets the amount
 					// to 0
 					// Else it sets it to the remainder
-					chestContents[i].setAmount(chestContents[i].getAmount() - stackSize);
+					chestContents[i].setAmount(chestContents[i].getQuantity() - stackSize);
 					// We can modify this, it is a copy.
-					item.setAmount(stackSize);
+					item.setQuantity(stackSize);
 					// Add the items to the players inventory
 					floor.addAll(pInv.addItem(item).values());
 					amount -= stackSize;
@@ -377,8 +381,8 @@ public class ContainerShop implements Shop {
 				if (stack == null)
 					continue; // No item
 				if (matches(stack)) {
-					int stackSize = Math.min(amount, stack.getAmount());
-					stack.setAmount(stack.getAmount() - stackSize);
+					int stackSize = Math.min(amount, stack.getQuantity());
+					stack.setQuantity(stack.getQuantity() - stackSize);
 					amount -= stackSize;
 				}
 			}
@@ -386,7 +390,7 @@ public class ContainerShop implements Shop {
 			p.getInventory().setContents(contents);
 			// This should not happen.
 			if (amount > 0) {
-				plugin.getLogger().log(Level.WARNING, "Could not take all items from a players inventory on purchase! " + p.getName() + ", missing: " + amount + ", item: " + this.getDataName() + "!");
+				plugin.getLogger().warn("Could not take all items from a players inventory on purchase! " + p.getName() + ", missing: " + amount + ", item: " + this.getDataName() + "!");
 			}
 		} else {
 			ItemStack[] playerContents = p.getInventory().getContents();
@@ -395,16 +399,16 @@ public class ContainerShop implements Shop {
 				ItemStack item = playerContents[i];
 				if (item != null && this.matches(item)) {
 					// Copy it, we don't want to interfere
-					item = item.clone();
+					item = item.copy();
 					// Amount = total, item.getAmount() = how many items in the
 					// stack
-					int stackSize = Math.min(amount, item.getAmount());
+					int stackSize = Math.min(amount, item.getQuantity());
 					// If Amount is item.getAmount(), then this sets the amount
 					// to 0
 					// Else it sets it to the remainder
-					playerContents[i].setAmount(playerContents[i].getAmount() - stackSize);
+					playerContents[i].setAmount(playerContents[i].getQuantity() - stackSize);
 					// We can modify this, it is a copy.
-					item.setAmount(stackSize);
+					item.setQuantity(stackSize);
 					// Add the items to the players inventory
 					chestInv.addItem(item);
 					amount -= stackSize;
@@ -498,17 +502,20 @@ public class ContainerShop implements Shop {
 	/**
 	 * Changes all lines of text on a sign near the shop
 	 * 
-	 * @param lines
-	 *            The array of lines to change. Index is line number.
+	 * @param lines The array of lines to change. Index is line number.
 	 */
 	public void setSignText(String[] lines) {
 		if (!Util.isLoaded(this.getLocation()))
 			return;
-		for (Sign sign : this.getSigns()) {
-			for (int i = 0; i < lines.length; i++) {
-				sign.setLine(i, lines[i].length() < 16 ? lines[i] : lines[i].substring(0, 15));
+		for (TileEntity entity : this.getSigns()) {
+			if (entity.supports(SignData.class)) {
+				for (int i = 0; i < lines.length; i++) {
+					SignData sign = entity.getOrCreate(SignData.class).get();
+					sign.set(sign.lines().set(i,
+							Text.of(lines[i].length() < 16 ? lines[i] : lines[i].substring(0, 15))));
+					entity.offer(sign);
+				}
 			}
-			sign.update(true);
 		}
 	}
 
@@ -519,34 +526,40 @@ public class ContainerShop implements Shop {
 	 * @return a list of signs that are attached to this shop (QuickShop and
 	 *         blank signs only)
 	 */
-	public List<Sign> getSigns() {
-		ArrayList<Sign> signs = new ArrayList<Sign>(1);
-		if (this.getLocation().getWorld() == null)
+	public List<TileEntity> getSigns() {
+		ArrayList<TileEntity> signs = new ArrayList<TileEntity>();
+		if (this.getLocation().getExtent() == null)
 			return signs;
-		Block[] blocks = new Block[4];
-		blocks[0] = loc.getBlock().getRelative(1, 0, 0);
-		blocks[1] = loc.getBlock().getRelative(-1, 0, 0);
-		blocks[2] = loc.getBlock().getRelative(0, 0, 1);
-		blocks[3] = loc.getBlock().getRelative(0, 0, -1);
+		@SuppressWarnings("unchecked")
+		Location<World>[] blocks = new Location[4];
+		blocks[0] = loc.getRelative(Direction.EAST);
+		blocks[1] = loc.getRelative(Direction.NORTH);
+		blocks[2] = loc.getRelative(Direction.SOUTH);
+		blocks[3] = loc.getRelative(Direction.WEST);
 		final String signHeader = MsgUtil.getMessage("signs.header", "");
-		for (Block b : blocks) {
-			if (b.getType() != Material.WALL_SIGN)
+		for (Location<World> b : blocks) {
+			if (b.getBlock().getType() != BlockTypes.WALL_SIGN)
 				continue;
-			if (!isAttached(b))
+			if (!isAttached(b.getBlock()))
 				continue;
-			Sign sign = (Sign) b.getState();
-			if (sign.getLine(0).contains(signHeader)) {
-				signs.add(sign);
+
+			TileEntity tileEntity = b.getTileEntity().get();
+			if(!tileEntity.supports(SignData.class)) {
+				continue;
+			}
+			SignData sign = tileEntity.getOrCreate(SignData.class).get();
+			if (sign.get(0).get().toPlain().contains(signHeader)) {
+				signs.add(tileEntity);
 			} else {
 				boolean text = false;
-				for (String s : sign.getLines()) {
+				for (Text s : sign.asList()) {
 					if (!s.isEmpty()) {
 						text = true;
 						break;
 					}
 				}
 				if (!text) {
-					signs.add(sign);
+					signs.add(tileEntity);
 				}
 			}
 		}
@@ -591,14 +604,14 @@ public class ContainerShop implements Shop {
 			this.getDisplayItem().remove();
 		}
 		// Delete the signs around it
-		for (Sign s : this.getSigns()) {
-			s.getBlock().set(BlockTypes.AIR);
+		for (TileEntity s : this.getSigns()) {
+			s.getLocation().setBlockType(BlockTypes.AIR);
 		}
 		// Delete it from the database
 		int x = this.getLocation().getBlockX();
 		int y = this.getLocation().getBlockY();
 		int z = this.getLocation().getBlockZ();
-		String world = this.getLocation().getWorld().getName();
+		String world = this.getLocation().getExtent().getName();
 		try {
 			DatabaseHelper.removeShop(plugin.getDB(), x, y, z, world);
 		} catch (SQLException e) {
@@ -622,9 +635,9 @@ public class ContainerShop implements Shop {
 	private void checkDisplay() {
 		if (plugin.display == false)
 			return;
-		if (getLocation().getWorld() == null)
+		if (getLocation().getExtent() == null)
 			return; // not loaded
-		boolean trans = Util.isTransparent(getLocation().clone().add(0.5, 1.2, 0.5).getBlock().getType());
+		boolean trans = Util.isTransparent(getLocation().copy().add(0.5, 1.2, 0.5).getBlock().getType());
 		if (trans && this.getDisplayItem() == null) {
 			this.displayItem = new DisplayItem(this, this.getItem());
 			this.getDisplayItem().spawn();
@@ -637,7 +650,7 @@ public class ContainerShop implements Shop {
 			}
 			DisplayItem disItem = this.getDisplayItem();
 			Location dispLoc = disItem.getDisplayLocation();
-			if (dispLoc.getBlock() != null && dispLoc.getBlock().getType() == Material.WATER) {
+			if (dispLoc.getBlock() != null && dispLoc.getBlock().getType() == BlockTypes.WATER) {
 				disItem.remove();
 				return;
 			}
@@ -647,6 +660,7 @@ public class ContainerShop implements Shop {
 				return;
 			}
 			Item item = disItem.getItem();
+			/**Need upgrade to Sponge API**/
 			if (item.getTicksLived() > 5000 || !item.isValid() || item.isDead()) {
 				disItem.respawn();
 				disItem.removeDupe();
@@ -672,7 +686,7 @@ public class ContainerShop implements Shop {
 		}
 		
 		// don't check if the chunk is not loaded
-		if (!item.getLocation().getWorld().isChunkLoaded(item.getLocation().getChunk())) { 
+		if (!item.getLocation().getExtent().isChunkLoaded(item.getLocation().getChunk())) { 
 			return false;
 		}
 
@@ -719,7 +733,7 @@ public class ContainerShop implements Shop {
 			return MsgUtil.getMessage("unknown-owner");
 		}
 		
-		final String name = Bukkit.getOfflinePlayer(this.getOwner()).getName();
+		final String name = Util.getOfflinePlayer(this.getOwner()).get().getName();
 		if (name == null) {
 			return MsgUtil.getMessage("unknown-owner");
 		}
@@ -729,7 +743,7 @@ public class ContainerShop implements Shop {
 
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder("Shop " + (loc.getWorld() == null ? "unloaded world" : loc.getWorld().getName()) + "(" + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ() + ")");
+		StringBuilder sb = new StringBuilder("Shop " + (loc.getExtent() == null ? "unloaded world" : loc.getExtent().getName()) + "(" + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ() + ")");
 		sb.append(" Owner: " + this.ownerName() + " - " + getOwner().toString());
 		if (isUnlimited())
 			sb.append(" Unlimited: true");

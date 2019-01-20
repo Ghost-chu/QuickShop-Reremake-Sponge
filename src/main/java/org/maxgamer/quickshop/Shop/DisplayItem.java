@@ -5,6 +5,7 @@ import org.maxgamer.quickshop.Util.Util;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.Item;
 import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.world.Chunk;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -228,7 +229,7 @@ public class DisplayItem {
 	 * item.
 	 */
 	public boolean removeDupe() {
-		if (shop.getLocation().getWorld() == null)
+		if (shop.getLocation().getExtent() == null)
 			return false;
 		Location<World> displayLoc = shop.getLocation().getBlock().getRelative(0, 1, 0).getLocation();
 		boolean removed = false;
