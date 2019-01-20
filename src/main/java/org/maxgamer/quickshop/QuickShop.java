@@ -27,6 +27,8 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GameAboutToStartServerEvent;
+import org.spongepowered.api.event.game.state.GameInitializationEvent;
+import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.scheduler.Task;
@@ -133,7 +135,11 @@ public class QuickShop {
 		return Sponge.getServer();
 	}
 	@Listener
-	public void onServerStart() {
+	public void onServerPreStart(GamePreInitializationEvent e) {
+		metrics.startup(e);
+	}
+	@Listener
+	public void onServerStart(GameInitializationEvent e) {
 		instance = this;
 		configuration = new Configuration();
 		configuration.setupConfig();
@@ -540,6 +546,7 @@ public class QuickShop {
 //			metrics.addCustomChart(new Metrics.SimplePie("shop_find_distance", () -> shop_find_distance));
 			// Exp for stats, maybe i need improve this, so i add this.
 			//metrics.submitData(); // Submit now!
+			
 			getLogger().info("Mertics submited.");
 		} else {
 			getLogger().info("You have disabled mertics, Skipping...");
