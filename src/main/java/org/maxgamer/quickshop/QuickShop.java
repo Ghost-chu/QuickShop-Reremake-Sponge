@@ -8,6 +8,7 @@ import org.maxgamer.quickshop.Database.*;
 import org.maxgamer.quickshop.Database.Database.ConnectionException;
 import org.maxgamer.quickshop.Economy.Economy;
 import org.maxgamer.quickshop.Economy.EconomyCore;
+import org.maxgamer.quickshop.Economy.Economy_Sponge;
 import org.maxgamer.quickshop.Economy.Economy_Vault;
 import org.maxgamer.quickshop.Listeners.*;
 import org.maxgamer.quickshop.Shop.ContainerShop;
@@ -744,7 +745,7 @@ public class QuickShop {
 	 */
 	public boolean loadEcon() {
 		try {
-			EconomyCore core = new Economy_Vault();
+			EconomyCore core = new Economy_Sponge();
 			if (core == null || !core.isValid()) {
 				// getLogger().error("Economy is not valid!");
 				getLogger().error("QuickShop could not hook an economy/Not found Vault!");
