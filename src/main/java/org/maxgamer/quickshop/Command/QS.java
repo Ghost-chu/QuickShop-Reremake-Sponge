@@ -74,7 +74,7 @@ public class QS implements CommandCallable{
 	private void silentUnlimited(CommandSource sender, String[]args) {
 		if (sender.hasPermission("quickshop.unlimited")) {
 			
-				Shop shop = plugin.getShopManager().getShop(new Location(Sponge.getServer().getWorld(args[1]).get(), Integer.valueOf(args[2]),
+				Shop shop = plugin.getShopManager().getShop(new Location<World>(Sponge.getServer().getWorld(args[1]).get(), Integer.valueOf(args[2]),
 						Integer.valueOf(args[3]), Integer.valueOf(args[4])));
 				if (shop != null) {
 					shop.setUnlimited(!shop.isUnlimited());
@@ -130,7 +130,7 @@ public class QS implements CommandCallable{
 		if (args.length < 4)
 			return;
 		Player p = (Player) sender;
-		Shop shop = plugin.getShopManager().getShop(new Location(Sponge.getServer().getWorld(args[1]).get(), Integer.valueOf(args[2]),
+		Shop shop = plugin.getShopManager().getShop(new Location<World>(Sponge.getServer().getWorld(args[1]).get(), Integer.valueOf(args[2]),
 				Integer.valueOf(args[3]), Integer.valueOf(args[4])));
 		if (shop == null)
 			return;
@@ -441,7 +441,7 @@ public class QS implements CommandCallable{
 	}
 	private void silentBuy(CommandSource sender, String[] args) {
 		if (sender.hasPermission("quickshop.create.buy")) {
-			Shop shop = plugin.getShopManager().getShop(new Location(Sponge.getServer().getWorld(args[1]).get(), Integer.valueOf(args[2]),
+			Shop shop = plugin.getShopManager().getShop(new Location<World>(Sponge.getServer().getWorld(args[1]).get(), Integer.valueOf(args[2]),
 					Integer.valueOf(args[3]), Integer.valueOf(args[4])));
 			if (shop != null && shop.getOwner().equals(((Player) sender).getUniqueId())) {
 				shop.setShopType(ShopType.BUYING);
@@ -457,7 +457,7 @@ public class QS implements CommandCallable{
 	}
 	private void setBuy(CommandSource sender) {
 		if (sender instanceof Player && sender.hasPermission("quickshop.create.buy")) {
-			BlockIterator bIt = new BlockIterator((LivingEntity) (Player) sender, 10);
+			BlockIterator bIt = new BlockIterator((Living) (Player) sender, 10);
 			while (bIt.hasNext()) {
 				Block b = bIt.next();
 				Shop shop = plugin.getShopManager().getShop(b.getLocation());
@@ -477,7 +477,7 @@ public class QS implements CommandCallable{
 	}
 	private void silentSell(CommandSource sender, String[] args) {
 		if (sender.hasPermission("quickshop.create.sell")) {
-				Shop shop = plugin.getShopManager().getShop(new Location(Sponge.getServer().getWorld(args[1]).get(),
+				Shop shop = plugin.getShopManager().getShop(new Location<World>(Sponge.getServer().getWorld(args[1]).get(),
 						Integer.valueOf(args[2]), Integer.valueOf(args[3]), Integer.valueOf(args[4])));
 				if (shop != null && shop.getOwner().equals(((Player) sender).getUniqueId())) {
 					shop.setShopType(ShopType.SELLING);
@@ -792,7 +792,7 @@ public class QS implements CommandCallable{
 		}
 		ShopManager manager = plugin.getShopManager();
 		try {
-			Shop shop = manager.getShop(new Location(Sponge.getServer().getWorld(args[4]).get(), Integer.parseInt(args[1]),
+			Shop shop = manager.getShop(new Location<World>(Sponge.getServer().getWorld(args[4]).get(), Integer.parseInt(args[1]),
 					Integer.parseInt(args[2]), Integer.parseInt(args[3])));
 			if (shop == null) {
 				sender.sendMessage(Text.of(MsgUtil.getMessage("shop-not-exist")));
@@ -821,7 +821,7 @@ public class QS implements CommandCallable{
 	 * @return The location the player should be facing to have their crosshairs on
 	 *         the location lookAt Kudos to bergerkiller for most of this function
 	 */
-	public Location lookAt(Location loc, Location lookat) {
+	public Location<World> lookAt(Location<World> loc, Location<World> lookat) {
 		// Clone the loc to prevent applied changes to the input loc
 		loc = loc.copy();
 		// Values of change in distance (make it relative)
