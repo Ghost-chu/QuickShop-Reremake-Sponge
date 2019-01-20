@@ -30,6 +30,7 @@ import org.spongepowered.api.event.game.state.GameAboutToStartServerEvent;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.util.Color;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.yaml.snakeyaml.Yaml;
@@ -104,8 +105,8 @@ public class QuickShop {
 	private boolean setupDBonEnableding = false;
 	private String dbPrefix="";
 	private Tab commandTabCompleter;
-	private Metrics metrics;
 	private Configuration configuration;
+	private MetricsLite2 metrics;
 	/** 
 	 * Get the Player's Shop limit.
 	 * @return int Player's shop limit
@@ -467,7 +468,7 @@ public class QuickShop {
 			String serverVer = Bukkit.getVersion();
 			String bukkitVer = Bukkit.getBukkitVersion();
 			String serverName = Bukkit.getServer().getName();
-			metrics = new Metrics(this);
+			
 			// Use internal Metric class not Maven for solve plugin name issues
 			String display_Items;
 			if (getConfig().getBoolean("shop.display-items")) { // Maybe mod server use this plugin more? Or have big
