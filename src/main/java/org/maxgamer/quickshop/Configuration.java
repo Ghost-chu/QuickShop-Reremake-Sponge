@@ -102,6 +102,8 @@ public class Configuration {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		}else {
+			//Do nothing
 		}
 	}
 	public InputStream getResource(String filename) {

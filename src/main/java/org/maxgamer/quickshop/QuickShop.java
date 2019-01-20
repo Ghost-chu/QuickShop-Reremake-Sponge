@@ -132,7 +132,7 @@ public class QuickShop {
 		configuration = new Configuration();
 		configuration.setupConfig();
 		getLogger().info("Quickshop Reremake by Ghost_chu(Minecraft SunnySide Server Community)");
-		getLogger().info("THIS VERSION ONLY SUPPORT BUKKIT API 1.13-1.13.x VERSION!");
+		getLogger().info("THIS VERSION ONLY SUPPORT SPONGE API 7!");
 		getLogger().info("Author:Ghost_chu");
 		getLogger().info("Original author:Netherfoam, Timtower, KaiNoMood");
 		getLogger().info("Let's us start load plugin");
@@ -902,4 +902,7 @@ public class QuickShop {
     public Configuration getConfiguration() {
 		return configuration;
 	}
+    public void saveDefaultConfig() {
+    	getConfiguration().saveResource("config.yml");
+    }
 }
