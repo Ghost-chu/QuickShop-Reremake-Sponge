@@ -2,7 +2,6 @@ package org.maxgamer.quickshop;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.scheduler.BukkitTask;
 import org.maxgamer.quickshop.Command.QS;
 import org.maxgamer.quickshop.Command.Tab;
 import org.maxgamer.quickshop.Database.*;
@@ -895,4 +894,11 @@ public class QuickShop {
     public Configuration getConfiguration() {
 		return configuration;
 	}
+    public void saveDefaultConfig() {
+    	configuration.saveResource("config.yml");
+    }
+    public void saveResource(String filename) {
+    	configuration.saveResource(filename);
+    }
 }
+    
