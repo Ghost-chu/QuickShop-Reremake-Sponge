@@ -1,5 +1,6 @@
 package org.maxgamer.quickshop.Shop;
 
+import java.awt.List;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
@@ -13,8 +14,24 @@ import org.maxgamer.quickshop.Database.DatabaseHelper;
 import org.maxgamer.quickshop.Util.MsgUtil;
 import org.maxgamer.quickshop.Util.Util;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.block.BlockType;
+import org.spongepowered.api.block.BlockTypes;
+import org.spongepowered.api.data.type.HandType;
+import org.spongepowered.api.data.type.HandTypes;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.SpongeEventFactory;
+import org.spongepowered.api.event.block.ChangeBlockEvent;
+import org.spongepowered.api.event.block.InteractBlockEvent;
+import org.spongepowered.api.event.block.InteractBlockEvent.Primary.MainHand;
+import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.cause.EventContext;
+import org.spongepowered.api.event.cause.EventContextKey;
+import org.spongepowered.api.event.cause.EventContextKeys;
 import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.plugin.Plugin;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.world.Chunk;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -42,8 +59,8 @@ public class ShopManager {
 	}
 
 	public void createShop(Shop shop,Info info) {
-		ShopCreateEvent ssShopCreateEvent = new ShopCreateEvent(shop, Bukkit.getPlayer(shop.getOwner()));
-		Bukkit.getPluginManager().callEvent(ssShopCreateEvent);
+		ShopCreateEvent ssShopCreateEvent = new ShopCreateEvent(shop,Sponge.getServer().getPlayer(shop.getOwner()).get(),null);
+		Sponge.getEventManager().post(ssShopCreateEvent);
 		if(ssShopCreateEvent.isCancelled()) {
 			return;
 		}
@@ -61,15 +78,15 @@ public class ShopManager {
 		//Create sign
 		if (info.getSignBlock() != null && plugin.getConfig().getBoolean("shop.auto-sign")) {
 			ItemType signType = info.getSignBlock().getType();
-			if (signType != ItemType.AIR && signType != ItemType.CAVE_AIR && signType != ItemType.VOID_AIR && signType != ItemType.WATER) {
+			if (signType != BlockTypes.AIR && signType !=BlockTypes.WATER) {
 				return;
 			}
 			boolean isWaterLogged = false;
-			if (info.getSignBlock().getType() == ItemType.WATER)
+			if (info.getSignBlock().getType() == BlockTypes.WATER)
 				isWaterLogged = true;
 			final BlockState bs = info.getSignBlock().getState();
 			final BlockFace bf = info.getLocation().getBlock().getFace(info.getSignBlock());
-			bs.setType(ItemType.WALL_SIGN);
+			bs.setType(BlockTypes.WALL_SIGN);
 			if (isWaterLogged) {
 				Waterlogged waterable = (Waterlogged) bs.getBlockData();
 				waterable.setWaterlogged(true); // Looks like sign directly put in water
@@ -145,7 +162,7 @@ public class ShopManager {
 	 *            coordinates and world are used.
 	 * @return
 	 */
-	public HashMap<Location, Shop> getShops(Chunk c) {
+	public HashMap<Location<World>, Shop> getShops(Chunk c) {
 		// long start = System.nanoTime();
 		HashMap<Location, Shop> shops = getShops(c.getWorld().getName(), c.getX(), c.getZ());
 		// long end = System.nanoTime();
@@ -154,8 +171,8 @@ public class ShopManager {
 		return shops;
 	}
 
-	public HashMap<Location, Shop> getShops(String world, int chunkX, int chunkZ) {
-		HashMap<ShopChunk, HashMap<Location, Shop>> inWorld = this.getShops(world);
+	public HashMap<Location<World>, Shop> getShops(String world, int chunkX, int chunkZ) {
+		HashMap<ShopChunk, HashMap<Location<World>, Shop>> inWorld = this.getShops(world);
 		if (inWorld == null) {
 			return null;
 		}
@@ -269,17 +286,17 @@ public class ShopManager {
 	 * @return True if they're allowed to place a shop there.
 	 */
 	public boolean canBuildShop(Player p, Block b, BlockFace bf) {
-		RegisteredListener openInvRegisteredListener = null; // added for compatibility reasons with OpenInv - see https://github.com/KaiKikuchi/QuickShop/issues/139
-		try {
-			if (plugin.openInvPlugin != null) {
-				for (RegisteredListener listener : PlayerInteractEvent.getHandlerList().getRegisteredListeners()) {
-					if (listener.getPlugin() == plugin.openInvPlugin) {
-						openInvRegisteredListener = listener;
-						PlayerInteractEvent.getHandlerList().unregister(listener);
-						break;
-					}
-				}
-			}
+//		RegisteredListener openInvRegisteredListener = null; // added for compatibility reasons with OpenInv - see https://github.com/KaiKikuchi/QuickShop/issues/139
+//		try {
+//			if (plugin.openInvPlugin != null) {
+//				for (RegisteredListener listener : PlayerInteractEvent.getHandlerList().getRegisteredListeners()) {
+//					if (listener.getPlugin() == plugin.openInvPlugin) {
+//						openInvRegisteredListener = listener;
+//						PlayerInteractEvent.getHandlerList().unregister(listener);
+//						break;
+//					}
+//				}
+//			}
 			
 			
 			if (plugin.limit) {
@@ -310,24 +327,24 @@ public class ShopManager {
 					return false;
 				}
 			}
-			PlayerInteractEvent pie = new PlayerInteractEvent(p, Action.RIGHT_CLICK_BLOCK, AIR, b, bf); // PIE = PlayerInteractEvent -  What else?
-			Bukkit.getPluginManager().callEvent(pie);
-			pie.getPlayer().closeInventory(); // If the player has chat open, this
+			InteractBlockEvent interactBlockEvent = SpongeEventFactory.createInteractBlockEventPrimaryMainHand(Cause.builder().build(EventContext.empty()), HandTypes.MAIN_HAND, p, b, bf);
+//			PlayerInteractEvent pie = new PlayerInteractEvent(p, "", AIR, b, bf); // PIE = PlayerInteractEvent -  What else?
+			Sponge.getEventManager().post(interactBlockEvent);
+			p.getPlayer().get().closeInventory();// If the player has chat open, this
 			// will close their chat.
-			if (pie.isCancelled()) {
+			if (interactBlockEvent.isCancelled()) {
 				return false;
 			}
-			ShopPreCreateEvent spce = new ShopPreCreateEvent(p, b.getLocation());
-			Bukkit.getPluginManager().callEvent(spce);
+			ShopPreCreateEvent spce = new ShopPreCreateEvent(p, b.getLocation(),Cause.builder().build(EventContext.empty()));
+			Sponge.getEventManager().post(spce);
 			if (spce.isCancelled()) {
 				return false;
 			} 
-		} finally {
-			if (plugin.openInvPlugin != null && openInvRegisteredListener != null) {
-				PlayerInteractEvent.getHandlerList().register(openInvRegisteredListener);
-			}
-		}
-		
+//		} finally {
+//			if (plugin.openInvPlugin != null && openInvRegisteredListener != null) {
+//				PlayerInteractEvent.getHandlerList().register(openInvRegisteredListener);
+//			}
+//		}
 		return true;
 	}
 
@@ -369,18 +386,18 @@ public class ShopManager {
 		try {
 			amount = Integer.parseInt(message);
 		} catch (NumberFormatException e) {
-			p.sendMessage(MsgUtil.getMessage("shop-purchase-cancelled"));
+			p.sendMessage(Text.of(MsgUtil.getMessage("shop-purchase-cancelled")));
 			return;
 		}
 		// Get the shop they interacted with
 				Shop shop = plugin.getShopManager().getShop(info.getLocation());
 				// It's not valid anymore
 				if (shop == null || Util.canBeShop(info.getLocation().getBlock(),null,true) == false) {
-					p.sendMessage(MsgUtil.getMessage("chest-was-removed"));
+					p.sendMessage(Text.of(MsgUtil.getMessage("chest-was-removed")));
 					return;
 				}
 				if (info.hasChanged(shop)) {
-					p.sendMessage(MsgUtil.getMessage("shop-has-changed"));
+					p.sendMessage(Text.of(MsgUtil.getMessage("shop-has-changed")));
 					return;
 				}
 		if(shop.isBuying()) {
@@ -388,8 +405,8 @@ public class ShopManager {
 		}else if (shop.isSelling()) {
 			actionSell(p, actions, info, message,shop,amount);
 		}else {
-			p.sendMessage(MsgUtil.getMessage("shop-purchase-cancelled"));
-			plugin.getLogger().warning("Shop data broken? Loc:"+shop.getLocation().toString());
+			p.sendMessage(Text.of(MsgUtil.getMessage("shop-purchase-cancelled")));
+			plugin.getLogger().warn("Shop data broken? Loc:"+shop.getLocation().toString());
 			return;
 		}
 	}
@@ -400,13 +417,13 @@ public class ShopManager {
 		if(space == -1)
 			space=10000;
 		if (space < amount) {
-			p.sendMessage(MsgUtil.getMessage("shop-has-no-space", "" + space, shop.getDataName()));
+			p.sendMessage(Text.of(MsgUtil.getMessage("shop-has-no-space", "" + space, shop.getDataName())));
 			return;
 		}
 		int count = Util.countItems(p.getInventory(), shop.getItem());
 		// Not enough items
 		if (amount > count) {
-			p.sendMessage(MsgUtil.getMessage("you-dont-have-that-many-items", "" + count, shop.getDataName()));
+			p.sendMessage(Text.of(MsgUtil.getMessage("you-dont-have-that-many-items", "" + count, shop.getDataName())));
 			return;
 		}
 		if (amount == 0) {
@@ -415,11 +432,11 @@ public class ShopManager {
 			return;
 		} else if (amount < 0) {
 			// & Dumber
-			p.sendMessage(MsgUtil.getMessage("negative-amount"));
+			p.sendMessage(Text.of(MsgUtil.getMessage("negative-amount")));
 			return;
 		}
-		ShopPurchaseEvent e = new ShopPurchaseEvent(shop, p, amount);
-		Bukkit.getPluginManager().callEvent(e);
+		ShopPurchaseEvent e = new ShopPurchaseEvent(shop, p, amount,Cause.builder().build(EventContext.empty()));
+		Sponge.getEventManager().post(e);
 		if (e.isCancelled())
 			return; // Cancelled
 		// Money handling
@@ -436,12 +453,12 @@ public class ShopManager {
 				// Tries to check their balance nicely to see if
 				// they can afford it.
 				if (plugin.getEcon().getBalance(shop.getOwner()) < amount * shop.getPrice()) {
-					p.sendMessage(MsgUtil.getMessage("the-owner-cant-afford-to-buy-from-you", format(amount * shop.getPrice()), format(plugin.getEcon().getBalance(shop.getOwner()))));
+					p.sendMessage(Text.of(MsgUtil.getMessage("the-owner-cant-afford-to-buy-from-you", format(amount * shop.getPrice()), format(plugin.getEcon().getBalance(shop.getOwner())))));
 					return;
 				}
 				// Check for plugins faking econ.has(amount)
 				if (!plugin.getEcon().withdraw(shop.getOwner(), total)) {
-					p.sendMessage(MsgUtil.getMessage("the-owner-cant-afford-to-buy-from-you", format(amount * shop.getPrice()), format(plugin.getEcon().getBalance(shop.getOwner()))));
+					p.sendMessage(Text.of(MsgUtil.getMessage("the-owner-cant-afford-to-buy-from-you", format(amount * shop.getPrice()), format(plugin.getEcon().getBalance(shop.getOwner())))));
 					return;
 				}
 				if (tax != 0) {
@@ -466,18 +483,18 @@ public class ShopManager {
 		Shop shop = plugin.getShopManager().getShop(info.getLocation());
 		// It's not valid anymore
 		if (shop == null || Util.canBeShop(info.getLocation().getBlock(),null,true) == false) {
-			p.sendMessage(MsgUtil.getMessage("chest-was-removed"));
+			p.sendMessage(Text.of(MsgUtil.getMessage("chest-was-removed")));
 			return;
 		}
 		if (info.hasChanged(shop)) {
-			p.sendMessage(MsgUtil.getMessage("shop-has-changed"));
+			p.sendMessage(Text.of(MsgUtil.getMessage("shop-has-changed")));
 			return;
 		}
 			int stock = shop.getRemainingStock();
 			if(stock==-1)
 				stock=10000;
 			if (stock < amount) {
-				p.sendMessage(MsgUtil.getMessage("shop-stock-too-low", "" + shop.getRemainingStock(), shop.getDataName()));
+				p.sendMessage(Text.of(MsgUtil.getMessage("shop-stock-too-low", "" + shop.getRemainingStock(), shop.getDataName())));
 				return;
 			}
 			if (amount == 0) {
@@ -486,15 +503,15 @@ public class ShopManager {
 				return;
 			} else if (amount < 0) {
 				// & Dumber
-				p.sendMessage(MsgUtil.getMessage("negative-amount"));
+				p.sendMessage(Text.of(MsgUtil.getMessage("negative-amount")));
 				return;
 			}
 			int pSpace = Util.countSpace(p.getInventory(), shop.getItem());
 			if (amount > pSpace) {
-				p.sendMessage(MsgUtil.getMessage("not-enough-space", "" + pSpace));
+				p.sendMessage(Text.of(MsgUtil.getMessage("not-enough-space", "" + pSpace)));
 				return;
 			}
-			ShopPurchaseEvent e = new ShopPurchaseEvent(shop, p, amount);
+			ShopPurchaseEvent e = new ShopPurchaseEvent(shop, p, amount,Cause.builder().build(EventContext.empty()));
 			//Bukkit.getPluginManager().callEvent(e);
 			Sponge.getEventManager().post(e);
 			if (e.isCancelled())
@@ -504,7 +521,7 @@ public class ShopManager {
 				// Check their balance. Works with *most* economy
 				// plugins*
 				if (plugin.getEcon().getBalance(p.getUniqueId()) < amount * shop.getPrice()) {
-					p.sendMessage(MsgUtil.getMessage("you-cant-afford-to-buy", format(amount * shop.getPrice()), format(plugin.getEcon().getBalance(p.getUniqueId()))));
+					p.sendMessage(Text.of(MsgUtil.getMessage("you-cant-afford-to-buy", format(amount * shop.getPrice()), format(plugin.getEcon().getBalance(p.getUniqueId())))));
 					return;
 				}
 				// Don't tax them if they're purchasing from
@@ -517,7 +534,7 @@ public class ShopManager {
 				
 				double total = amount * shop.getPrice();
 				if (!plugin.getEcon().withdraw(p.getUniqueId(), total)) {
-					p.sendMessage(MsgUtil.getMessage("you-cant-afford-to-buy", format(amount * shop.getPrice()), format(plugin.getEcon().getBalance(p.getUniqueId()))));
+					p.sendMessage(Text.of(MsgUtil.getMessage("you-cant-afford-to-buy", format(amount * shop.getPrice()), format(plugin.getEcon().getBalance(p.getUniqueId())))));
 					return;
 				}
 				if (!shop.isUnlimited() || plugin.getConfig().getBoolean("shop.pay-unlimited-shop-owners")) {
@@ -551,26 +568,26 @@ public class ShopManager {
 		try {
 			// Checking the shop can be created
 			Util.debugLog("calling for protection check...");
-			BlockBreakEvent be = new BlockBreakEvent(info.getLocation().getBlock(), p);
-			Bukkit.getPluginManager().callEvent(be);
+			ChangeBlockEvent.Break be = SpongeEventFactory.createChangeBlockEventBreak(Cause.builder().append("QuickShop Protection Checking").build(EventContext.empty()), new List());
+			Sponge.getEventManager().post(be);
 			if (be.isCancelled()) {
-				be.getPlayer().sendMessage(MsgUtil.getMessage("no-permission"));
+				p.sendMessage(Text.of(MsgUtil.getMessage("no-permission")));
 				return;
 			}
 			if (plugin.getShopManager().getShop(info.getLocation()) != null) {
-				p.sendMessage(MsgUtil.getMessage("shop-already-owned"));
+				p.sendMessage(Text.of(MsgUtil.getMessage("shop-already-owned")));
 				return;
 			}
 			if (Util.getSecondHalf(info.getLocation().getBlock()) != null
 					&& !p.hasPermission("quickshop.create.double")) {
-				p.sendMessage(MsgUtil.getMessage("no-double-chests"));
+				p.sendMessage(Text.of(MsgUtil.getMessage("no-double-chests")));
 				return;
 			}
 			if (Util.canBeShop(info.getLocation().getBlock(),null,true) == false) {
-				p.sendMessage(MsgUtil.getMessage("chest-was-removed"));
+				p.sendMessage(Text.of(MsgUtil.getMessage("chest-was-removed")));
 				return;
 			}
-			if (info.getLocation().getWorld().getBlockAt(info.getLocation()).getType() == ItemType.ENDER_CHEST) {
+			if (info.getLocation().getWorld().getBlockAt(info.getLocation()).getType() == BlockTypes.ENDER_CHEST) {
 				if (!p.hasPermission("quickshop.create.enderchest"))
 					return;
 			}
@@ -582,7 +599,7 @@ public class ShopManager {
 				price = Double.parseDouble(message);
 			}
 			if (price < 0.01) {
-				p.sendMessage(MsgUtil.getMessage("price-too-cheap"));
+				p.sendMessage(Text.of(MsgUtil.getMessage("price-too-cheap")));
 				return;
 			}
 			// Check price restriction
@@ -592,8 +609,8 @@ public class ShopManager {
 					// p.sendMessage(ChatColor.RED+"Restricted prices for
 					// "+info.getItem().getType()+": min "+priceRestriction.getKey()+", max
 					// "+priceRestriction.getValue());
-					p.sendMessage(MsgUtil.getMessage("restricted-prices", MsgUtil.getDisplayName(info.getItem()),
-							String.valueOf(priceRestriction.getKey()), String.valueOf(priceRestriction.getValue())));
+					p.sendMessage(Text.of(MsgUtil.getMessage("restricted-prices", MsgUtil.getDisplayName(info.getItem()),
+							String.valueOf(priceRestriction.getKey()), String.valueOf(priceRestriction.getValue()))));
 				}
 			}
 
@@ -601,14 +618,14 @@ public class ShopManager {
 			// Tax refers to the cost to create a shop. Not actual
 			// tax, that would be silly
 			if (tax != 0 && plugin.getEcon().getBalance(p.getUniqueId()) < tax) {
-				p.sendMessage(MsgUtil.getMessage("you-cant-afford-a-new-shop", format(tax)));
+				p.sendMessage(Text.of(MsgUtil.getMessage("you-cant-afford-a-new-shop", format(tax))));
 				return;
 			}
 			// Create the sample shop.
 			Shop shop = new ContainerShop(info.getLocation(), price, info.getItem(), p.getUniqueId());
 			shop.onLoad();
-			ShopCreateEvent e = new ShopCreateEvent(shop, p);
-			Bukkit.getPluginManager().callEvent(e);
+			ShopCreateEvent e = new ShopCreateEvent(shop, p,Cause.builder().build(EventContext.empty()));
+			Sponge.getEventManager().post(e);
 			if (e.isCancelled()) {
 				shop.onUnload();
 				return;
@@ -618,7 +635,7 @@ public class ShopManager {
 			// money back.
 			if (tax != 0) {
 				if (!plugin.getEcon().withdraw(p.getUniqueId(), tax)) {
-					p.sendMessage(MsgUtil.getMessage("you-cant-afford-a-new-shop", format(tax)));
+					p.sendMessage(Text.of(MsgUtil.getMessage("you-cant-afford-a-new-shop", format(tax))));
 					shop.onUnload();
 					return;
 				}
@@ -630,7 +647,7 @@ public class ShopManager {
 					}
 				} catch (Exception e2) {
 					e2.printStackTrace();
-					plugin.getLogger().log(Level.WARNING,
+					plugin.getLogger().warn(
 							"QuickShop can't pay tax to account in config.yml,Please set tax account name to a exist player!");
 				}
 			}
@@ -643,7 +660,7 @@ public class ShopManager {
 				// Warn them if they haven't been warned since
 				// reboot
 				if (!plugin.warnings.contains(p.getName())) {
-					p.sendMessage(MsgUtil.getMessage("shops-arent-locked"));
+					p.sendMessage(Text.of(MsgUtil.getMessage("shops-arent-locked")));
 					plugin.warnings.add(p.getName());
 				}
 			}
@@ -657,14 +674,14 @@ public class ShopManager {
 					if (nextTo.getPrice() > shop.getPrice()) {
 						// The one next to it must always be a
 						// buying shop.
-						p.sendMessage(MsgUtil.getMessage("buying-more-than-selling"));
+						p.sendMessage(Text.of(MsgUtil.getMessage("buying-more-than-selling")));
 					}
 				}
 			}
 		}
 		/* They didn't enter a number. */
 		catch (NumberFormatException ex) {
-			p.sendMessage(MsgUtil.getMessage("shop-creation-cancelled"));
+			p.sendMessage(Text.of(MsgUtil.getMessage("shop-creation-cancelled")));
 			return;
 		}
 	}
