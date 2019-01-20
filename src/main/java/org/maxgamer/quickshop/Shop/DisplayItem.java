@@ -1,15 +1,15 @@
 package org.maxgamer.quickshop.Shop;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Item;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.util.Vector;
 import org.maxgamer.quickshop.QuickShop;
+import org.maxgamer.quickshop.Util.Util;
+import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.Item;
+import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
+
+import com.flowpowered.math.vector.Vector3d;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -40,9 +40,9 @@ public class DisplayItem {
 	 */
 	public DisplayItem(Shop shop, ItemStack iStack) {
 		this.shop = shop;
-		this.iStack = iStack.clone();
+		this.iStack = iStack.copy();
 		
-		// this.displayLoc = shop.getLocation().clone().add(0.5, 1.2, 0.5);
+		// this.displayLoc = shop.getLocation().copy().add(0.5, 1.2, 0.5);
 	}
 
 	/**
@@ -51,7 +51,7 @@ public class DisplayItem {
 	public void spawn() {
 		if (shop.getLocation().getWorld() == null)
 			return;
-		Location dispLoc = this.getDisplayLocation();
+		Location<World> dispLoc = this.getDisplayLocation();
 		// Check is or not in blacklist/whitelist
 		boolean showFloatItem = true;
 		if (plugin.getConfig().getBoolean("float.enable")) {
@@ -66,7 +66,7 @@ public class DisplayItem {
 				for (Object material : itemlist) {
 					String materialname = String.valueOf(material);
 //					String itemname = iStack.getType().name();
-					if (Material.getMaterial(materialname).equals(iStack.getType())) {
+					if (Util.matchItemType(materialname).equals(iStack.getType())) {
 						found_item = true;
 						break;
 					} else {
@@ -168,7 +168,7 @@ public class DisplayItem {
 				return;
 			}
 			this.item = shop.getLocation().getWorld().dropItem(dispLoc, this.iStack);
-			this.item.setVelocity(new Vector(0, 0.1, 0));
+			this.item.setVelocity(new Vector3d(0, 0.1, 0));
 			try {
 				this.safeGuard(this.item);
 				// NMS.safeGuard
@@ -230,7 +230,7 @@ public class DisplayItem {
 	public boolean removeDupe() {
 		if (shop.getLocation().getWorld() == null)
 			return false;
-		Location displayLoc = shop.getLocation().getBlock().getRelative(0, 1, 0).getLocation();
+		Location<World> displayLoc = shop.getLocation().getBlock().getRelative(0, 1, 0).getLocation();
 		boolean removed = false;
 		Chunk c = displayLoc.getChunk();
 		for (Entity e : c.getEntities()) {
@@ -266,8 +266,8 @@ public class DisplayItem {
 	 * @return Returns the exact location of the display item. (1 above shop
 	 *         block, in the center)
 	 */
-	public Location getDisplayLocation() {
-		return this.shop.getLocation().clone().add(0.5, 1.2, 0.5);
+	public Location<World> getDisplayLocation() {
+		return this.shop.getLocation().copy().add(0.5, 1.2, 0.5);
 	}
 
 	/**

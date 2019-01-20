@@ -1,9 +1,12 @@
 package org.maxgamer.quickshop.Util;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.inventory.ItemStack;
 import org.maxgamer.quickshop.QuickShop;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.item.ItemType;
+import org.spongepowered.api.item.ItemTypes;
+import org.spongepowered.api.item.inventory.ItemStack;
+
+import net.minecraft.server.MinecraftServer;
 
 import java.lang.reflect.Method;
 
@@ -13,9 +16,9 @@ public abstract class ItemNMS {
     private static Method itemStack_saveMethod;
     
     static {
-        String name = Bukkit.getServer().getClass().getPackage().getName();
+        String name = ((MinecraftServer)(Sponge.getServer())).getClass().getPackage().getName();
         String nmsVersion = name.substring(name.lastIndexOf('.') + 1);
-        
+        /**@TODO There need upgrade to Sponge API**/
         try {
             craftItemStack_asNMSCopyMethod = Class.forName("org.bukkit.craftbukkit." + nmsVersion + ".inventory.CraftItemStack")
                     .getDeclaredMethod("asNMSCopy", ItemStack.class);
@@ -33,7 +36,7 @@ public abstract class ItemNMS {
     }
 	
 	public static String saveJsonfromNMS(ItemStack bStack) throws Throwable {
-	    if (bStack.getType() == Material.AIR)
+	    if (bStack.getType() == ItemTypes.AIR)
 	        return null;
         Object mcStack = craftItemStack_asNMSCopyMethod.invoke(null, bStack);
         Object nbtTagCompound = nbtTagCompoundClass.newInstance();

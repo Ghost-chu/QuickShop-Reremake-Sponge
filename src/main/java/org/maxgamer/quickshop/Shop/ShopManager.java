@@ -7,35 +7,21 @@ import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.logging.Level;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Chunk;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.data.Waterlogged;
-import org.bukkit.entity.Player;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.material.Sign;
-import org.bukkit.plugin.RegisteredListener;
 import org.maxgamer.quickshop.QuickShop;
 import org.maxgamer.quickshop.Database.Database;
 import org.maxgamer.quickshop.Database.DatabaseHelper;
 import org.maxgamer.quickshop.Util.MsgUtil;
 import org.maxgamer.quickshop.Util.Util;
+import org.spongepowered.api.item.ItemType;
+import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 public class ShopManager {
 	QuickShop plugin = QuickShop.instance;
 	private HashMap<UUID, Info> actions = new HashMap<UUID, Info>();
-	private HashMap<String, HashMap<ShopChunk, HashMap<Location, Shop>>> shops = new HashMap<String, HashMap<ShopChunk, HashMap<Location, Shop>>>();
-	final private static ItemStack AIR = new ItemStack(Material.AIR);
+	private HashMap<String, HashMap<ShopChunk, HashMap<Location<World>, Shop>>> shops = new HashMap<String, HashMap<ShopChunk, HashMap<Location, Shop>>>();
+	final private static ItemStack AIR = new ItemStack(ItemTypes.AIR);
 	
 
 	public ShopManager(QuickShop plugin) {
@@ -60,7 +46,7 @@ public class ShopManager {
 		if(ssShopCreateEvent.isCancelled()) {
 			return;
 		}
-		Location loc = shop.getLocation();
+		Location<World> loc = shop.getLocation();
 		ItemStack item = shop.getItem();
 		try {
 			// Write it to the database
@@ -73,16 +59,16 @@ public class ShopManager {
 		}
 		//Create sign
 		if (info.getSignBlock() != null && plugin.getConfig().getBoolean("shop.auto-sign")) {
-			Material signType = info.getSignBlock().getType();
-			if (signType != Material.AIR && signType != Material.CAVE_AIR && signType != Material.VOID_AIR && signType != Material.WATER) {
+			ItemType signType = info.getSignBlock().getType();
+			if (signType != ItemType.AIR && signType != ItemType.CAVE_AIR && signType != ItemType.VOID_AIR && signType != ItemType.WATER) {
 				return;
 			}
 			boolean isWaterLogged = false;
-			if (info.getSignBlock().getType() == Material.WATER)
+			if (info.getSignBlock().getType() == ItemType.WATER)
 				isWaterLogged = true;
 			final BlockState bs = info.getSignBlock().getState();
 			final BlockFace bf = info.getLocation().getBlock().getFace(info.getSignBlock());
-			bs.setType(Material.WALL_SIGN);
+			bs.setType(ItemType.WALL_SIGN);
 			if (isWaterLogged) {
 				Waterlogged waterable = (Waterlogged) bs.getBlockData();
 				waterable.setWaterlogged(true); // Looks like sign directly put in water
@@ -183,7 +169,7 @@ public class ShopManager {
 	 *            The location to get the shop from
 	 * @return The shop at that location
 	 */
-	public Shop getShop(Location loc) {
+	public Shop getShop(Location<World> loc) {
 		HashMap<Location, Shop> inChunk = getShops(loc.getChunk());
 		if (inChunk == null) {
 			return null;
@@ -240,7 +226,7 @@ public class ShopManager {
 	public void removeShop(Shop shop) {
 		ShopUnloadEvent shopUnloadEvent = new ShopUnloadEvent(shop);
 		Bukkit.getPluginManager().callEvent(shopUnloadEvent);
-		Location loc = shop.getLocation();
+		Location<World> loc = shop.getLocation();
 		String world = loc.getWorld().getName();
 		HashMap<ShopChunk, HashMap<Location, Shop>> inWorld = this.getShops().get(world);
 		int x = (int) Math.floor((shop.getLocation().getBlockX()) / 16.0);
@@ -582,7 +568,7 @@ public class ShopManager {
 				p.sendMessage(MsgUtil.getMessage("chest-was-removed"));
 				return;
 			}
-			if (info.getLocation().getWorld().getBlockAt(info.getLocation()).getType() == Material.ENDER_CHEST) {
+			if (info.getLocation().getWorld().getBlockAt(info.getLocation()).getType() == ItemType.ENDER_CHEST) {
 				if (!p.hasPermission("quickshop.create.enderchest"))
 					return;
 			}
@@ -648,7 +634,7 @@ public class ShopManager {
 			}
 			/* The shop has hereforth been successfully created */
 			createShop(shop,info);
-			Location loc = shop.getLocation();
+			Location<World> loc = shop.getLocation();
 			plugin.log(p.getName() + " created a " + MsgUtil.getDisplayName(shop.getItem()) + " shop at ("
 					+ loc.getWorld().getName() + " - " + loc.getX() + "," + loc.getY() + "," + loc.getZ() + ")");
 			if (!plugin.getConfig().getBoolean("shop.lock")) {
@@ -697,8 +683,8 @@ public class ShopManager {
 
 	public class ShopIterator implements Iterator<Shop> {
 		private Iterator<Shop> shops;
-		private Iterator<HashMap<Location, Shop>> chunks;
-		private Iterator<HashMap<ShopChunk, HashMap<Location, Shop>>> worlds;
+		private Iterator<HashMap<Location<World>, Shop>> chunks;
+		private Iterator<HashMap<ShopChunk, HashMap<Location<World>, Shop>>> worlds;
 		private Shop current;
 
 		public ShopIterator() {

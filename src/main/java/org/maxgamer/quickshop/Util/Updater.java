@@ -7,9 +7,9 @@ import java.net.URL;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.maxgamer.quickshop.QuickShop;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.util.Color;
 
 
 public class Updater {
@@ -28,7 +28,7 @@ public class Updater {
             int timed_out = 300000;
             connection.setConnectTimeout(timed_out);
             connection.setReadTimeout(timed_out);
-            String localPluginVersion = QuickShop.instance.getDescription().getVersion();
+            String localPluginVersion = QuickShop.getVersion();
             String spigotPluginVersion = new BufferedReader(new InputStreamReader(connection.getInputStream())).readLine();
             if (!spigotPluginVersion.equals(localPluginVersion) && spigotPluginVersion != null) {
 //                QuickShgetLogger().info("New QuickShop release now updated on SpigotMC.org! ");
@@ -39,7 +39,7 @@ public class Updater {
             connection.disconnect();
             return false;
         } catch (IOException e) {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.RED + "[QuickShop] Failed to check for an update on SpigotMC.org! Maybe internet issue or SpigotMC host down. If you want disable update checker, you can disable in config.yml, but we still high-recommand check update on SpigotMC.org.");
+           System.out.println(Color.RED + "[QuickShop] Failed to check for an update on SpigotMC.org! Maybe internet issue or SpigotMC host down. If you want disable update checker, you can disable in config.yml, but we still high-recommand check update on SpigotMC.org.");
             return false;
         }
     }

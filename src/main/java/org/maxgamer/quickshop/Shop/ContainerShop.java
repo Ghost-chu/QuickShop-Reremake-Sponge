@@ -8,28 +8,25 @@ import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.logging.Level;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.block.Sign;
-import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Item;
-import org.bukkit.entity.Player;
-import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.Damageable;
 import org.maxgamer.quickshop.QuickShop;
 import org.maxgamer.quickshop.Database.DatabaseHelper;
 import org.maxgamer.quickshop.Util.MsgUtil;
 import org.maxgamer.quickshop.Util.Util;
-
-import com.lishid.openinv.OpenInv;
+import org.spongepowered.api.block.BlockState;
+import org.spongepowered.api.block.BlockTypes;
+import org.spongepowered.api.block.tileentity.Sign;
+import org.spongepowered.api.entity.Item;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.item.ItemType;
+import org.spongepowered.api.item.ItemTypes;
+import org.spongepowered.api.item.enchantment.Enchantment;
+import org.spongepowered.api.item.inventory.Inventory;
+import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 public class ContainerShop implements Shop {
-	private Location loc;
+	private Location<World> loc;
 	private double price;
 	private UUID owner;
 	private ItemStack item;
@@ -73,12 +70,12 @@ public class ContainerShop implements Shop {
 	 * @param owner
 	 *            The player who owns this shop.
 	 */
-	public ContainerShop(Location loc, double price, ItemStack item, UUID owner) {
+	public ContainerShop(Location<World> loc, double price, ItemStack item, UUID owner) {
 		this.loc = loc;
 		this.price = price;
 		this.owner = owner;
-		this.item = item.clone();
-		this.plugin = (QuickShop) Bukkit.getPluginManager().getPlugin("QuickShop");
+		this.item = item.copy();
+		this.plugin = QuickShop.instance;
 		this.item.setAmount(1);
 		if (plugin.display) {
 			this.displayItem = new DisplayItem(this, this.item);
@@ -127,7 +124,7 @@ public class ContainerShop implements Shop {
 	 *         null if this shop is not attached to another.
 	 */
 	public ContainerShop getAttachedShop() {
-		Block c = Util.getSecondHalf(this.getLocation().getBlock());
+		BlockState c = Util.getSecondHalf(this.getLocation().getBlock());
 		if (c == null)
 			return null;
 		Shop shop = plugin.getShopManager().getShop(c.getLocation());
@@ -164,7 +161,7 @@ public class ContainerShop implements Shop {
 	/**
 	 * @return The location of the shops chest
 	 */
-	public Location getLocation() {
+	public Location<World> getLocation() {
 		return this.loc;
 	}
 
@@ -189,7 +186,7 @@ public class ContainerShop implements Shop {
 	/**
 	 * @return The ItemStack type of this shop
 	 */
-	public Material getMaterial() {
+	public ItemType getMaterial() {
 		return this.item.getType();
 	}
 
@@ -223,15 +220,15 @@ public class ContainerShop implements Shop {
 	 * @return The chest this shop is based on.
 	 */
 	public Inventory getInventory() throws IllegalStateException {
-		try {
-		if(loc.getBlock().getState().getType()==Material.ENDER_CHEST && plugin.openInvPlugin!=null) {
-			OpenInv openInv = ((OpenInv)plugin.openInvPlugin);
-			 return openInv.getSpecialEnderChest(openInv.loadPlayer(Bukkit.getOfflinePlayer(this.owner)), Bukkit.getOfflinePlayer(this.owner).isOnline()).getBukkitInventory();
-		}
-		}catch(Exception e){
-			Util.debugLog(e.getMessage());
-			return null;
-		}
+//		try {
+//		if(loc.getBlock().getState().getType()==Material.ENDER_CHEST && plugin.openInvPlugin!=null) {
+//			OpenInv openInv = ((OpenInv)plugin.openInvPlugin);
+//			 return openInv.getSpecialEnderChest(openInv.loadPlayer(Bukkit.getOfflinePlayer(this.owner)), Bukkit.getOfflinePlayer(this.owner).isOnline()).getBukkitInventory();
+//		}
+//		}catch(Exception e){
+//			Util.debugLog(e.getMessage());
+//			return null;
+//		}
 		InventoryHolder container;
 		try {
 			container = (InventoryHolder) this.loc.getBlock().getState();
@@ -556,8 +553,8 @@ public class ContainerShop implements Shop {
 		return signs;
 	}
 
-	public boolean isAttached(Block b) {
-		if (b.getType() != Material.WALL_SIGN)
+	public boolean isAttached(BlockState b) {
+		if (b.getType() != BlockTypes.WALL_SIGN)
 			new IllegalArgumentException(b + " Is not a sign!").printStackTrace();
 		return this.getLocation().getBlock().equals(Util.getAttached(b));
 	}
@@ -595,7 +592,7 @@ public class ContainerShop implements Shop {
 		}
 		// Delete the signs around it
 		for (Sign s : this.getSigns()) {
-			s.getBlock().setType(Material.AIR);
+			s.getBlock().set(BlockTypes.AIR);
 		}
 		// Delete it from the database
 		int x = this.getLocation().getBlockX();
@@ -740,4 +737,5 @@ public class ContainerShop implements Shop {
 		sb.append(" Item: " + getItem().toString());
 		return sb.toString();
 	}
+
 }

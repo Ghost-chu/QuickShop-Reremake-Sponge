@@ -1,30 +1,31 @@
 package org.maxgamer.quickshop.Shop;
 
-import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.bukkit.inventory.ItemStack;
+import org.spongepowered.api.block.BlockState;
+import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 public class Info {
-	private Location loc;
+	private Location<World> loc;
 	private ShopAction action;
 	private ItemStack item;
-	private Block last;
+	private BlockState last;
 	private Shop shop;
 
-	public Info(Location loc, ShopAction action, ItemStack item, Block last) {
+	public Info(Location<World> loc, ShopAction action, ItemStack item, BlockState last) {
 		this.loc = loc;
 		this.action = action;
 		this.last = last;
 		if (item != null)
-			this.item = item.clone();
+			this.item = item.copy();
 	}
 
-	public Info(Location loc, ShopAction action, ItemStack item, Block last, Shop shop) {
+	public Info(Location<World> loc, ShopAction action, ItemStack item, BlockState last, Shop shop) {
 		this.loc = loc;
 		this.action = action;
 		this.last = last;
 		if (item != null)
-			this.item = item.clone();
+			this.item = item.copy();
 		if (shop != null) {
 			this.shop = shop.clone();
 		}
@@ -57,7 +58,7 @@ public class Info {
 	/**
 	 * @return Location loc, Get shop's location,
 	 * */
-	public Location getLocation() {
+	public Location<World> getLocation() {
 		return this.loc;
 	}
 
@@ -76,9 +77,9 @@ public class Info {
 		this.action = action;
 	}
 	/**
-	 * @return Block signBlock, Get block of shop's sign, may return the null.
+	 * @return BlockState signBlock, Get block of shop's sign, may return the null.
 	 * */
-	public Block getSignBlock() {
+	public BlockState getSignBlock() {
 		return this.last;
 	}
 }

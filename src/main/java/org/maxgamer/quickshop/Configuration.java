@@ -5,11 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.instrument.IllegalClassFormatException;
-import java.net.URL;
 import java.nio.file.Path;
-import java.sql.Savepoint;
-
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.config.DefaultConfig;
@@ -66,9 +62,50 @@ public class Configuration {
 		try {
 			yamlConfiguration.save(config);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	
+	public File getConfig() {
+		return config;
+	}
+	public Path getDefaultConfig() {
+		return defaultConfig;
+	}
+	public File getDataFolder() {
+		return config.getParentFile();
+	}
+
+	public void saveResource(String filename) {
+		File save = Sponge.getConfigManager().getPluginConfig(QuickShop.instance).getConfigPath().toFile();
+		if (!save.exists()) {
+			InputStream savefile = this.getClass().getResourceAsStream("/" + filename);
+			BufferedReader br = new BufferedReader(new InputStreamReader(savefile));
+			String s = null;
+			StringBuilder sb = new StringBuilder();
+			try {
+				while ((s = br.readLine()) != null) {
+					sb.append(s);
+					sb.append("\n");
+				}
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			String defaultConfig = sb.toString();
+			try {
+				config.createNewFile();
+				FileWriter fw = new FileWriter(config);
+				fw.write(defaultConfig);
+				fw.flush();
+				fw.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	public InputStream getResource(String filename) {
+			 InputStream savefile = this.getClass().getResourceAsStream("/"+filename); 
+			 return savefile;
+	}
 }

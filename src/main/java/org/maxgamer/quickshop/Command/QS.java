@@ -4,25 +4,11 @@ import java.io.File;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Chunk;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.block.Block;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.util.BlockIterator;
 import org.maxgamer.quickshop.QuickShop;
 import org.maxgamer.quickshop.Database.Database;
 import org.maxgamer.quickshop.Database.DatabaseHelper;
@@ -37,8 +23,22 @@ import org.maxgamer.quickshop.Shop.ShopManager;
 import org.maxgamer.quickshop.Shop.ShopType;
 import org.maxgamer.quickshop.Util.MsgUtil;
 import org.maxgamer.quickshop.Util.Util;
+import org.spongepowered.api.command.CommandCallable;
+import org.spongepowered.api.command.CommandException;
+import org.spongepowered.api.command.CommandResult;
+import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.command.args.CommandContext;
+import org.spongepowered.api.command.spec.CommandExecutor;
+import org.spongepowered.api.entity.living.Living;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.item.ItemTypes;
+import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.util.Color;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
-public class QS implements CommandExecutor{
+public class QS implements CommandCallable{
 	QuickShop plugin;
 
 	public QS(QuickShop plugin) {
@@ -46,7 +46,7 @@ public class QS implements CommandExecutor{
 	}
 
 
-	private void setUnlimited(CommandSender sender) {
+	private void setUnlimited(CommandSource sender) {
 		if (sender instanceof Player && sender.hasPermission("quickshop.unlimited")) {
 			BlockIterator bIt = new BlockIterator((Player) sender, 10);
 			while (bIt.hasNext()) {
@@ -56,19 +56,19 @@ public class QS implements CommandExecutor{
 					shop.setUnlimited(!shop.isUnlimited());
 					shop.setSignText();
 					shop.update();
-					sender.sendMessage(MsgUtil.getMessage("command.toggle-unlimited",
+					sender.sendMessage(Text.of(MsgUtil.getMessage("command.toggle-unlimited",
 							(shop.isUnlimited() ? "unlimited" : "limited")));
 					return;
 				}
 			}
-			sender.sendMessage(MsgUtil.getMessage("not-looking-at-shop"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("not-looking-at-shop"));
 			return;
 		} else {
-			sender.sendMessage(MsgUtil.getMessage("no-permission"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission"));
 			return;
 		}
 	}
-	private void silentUnlimited(CommandSender sender, String[]args) {
+	private void silentUnlimited(CommandSource sender, String[]args) {
 		if (sender.hasPermission("quickshop.unlimited")) {
 			
 				Shop shop = plugin.getShopManager().getShop(new Location(Bukkit.getWorld(args[1]), Integer.valueOf(args[2]),
@@ -78,19 +78,19 @@ public class QS implements CommandExecutor{
 					shop.setSignText();
 					shop.update();
 					MsgUtil.sendControlPanelInfo(sender, shop);
-					sender.sendMessage(MsgUtil.getMessage("command.toggle-unlimited",
+					sender.sendMessage(Text.of(MsgUtil.getMessage("command.toggle-unlimited",
 							(shop.isUnlimited() ? "unlimited" : "limited")));
 					return;
 				}
 			
 		} else {
-			sender.sendMessage(MsgUtil.getMessage("no-permission"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission"));
 			return;
 		}
 	}
-	private void remove(CommandSender sender, String[] args) {
+	private void remove(CommandSource sender, String[] args) {
 		if (sender instanceof Player == false) {
-			sender.sendMessage(ChatColor.RED + "Only players may use that command.");
+			sender.sendMessage(Text.of(Color.RED + "Only players may use that command.");
 			return;
 		}
 		Player p = (Player) sender;
@@ -102,16 +102,16 @@ public class QS implements CommandExecutor{
 				if (shop.getOwner().equals(p.getUniqueId())||sender.hasPermission("quickshop.other.destroy")) {
 					shop.delete();
 				} else {
-					sender.sendMessage(ChatColor.RED + MsgUtil.getMessage("no-permission"));
+					sender.sendMessage(Text.of(Color.RED + MsgUtil.getMessage("no-permission"));
 				}
 				return;
 			}
 		}
-		p.sendMessage(ChatColor.RED + "No shop found!");
+		p.sendMessage(Color.RED + "No shop found!");
 	}
-	private void fetchMessage(CommandSender sender, String[] args) {
+	private void fetchMessage(CommandSource sender, String[] args) {
 		if (sender instanceof Player == false) {
-			sender.sendMessage(ChatColor.RED + "Only players may use that command.");
+			sender.sendMessage(Text.of(Color.RED + "Only players may use that command.");
 			return;
 		}
 		Player p = (Player) sender;
@@ -122,7 +122,7 @@ public class QS implements CommandExecutor{
 				}
 			});
 	}
-	private void silentRemove(CommandSender sender, String[] args) {
+	private void silentRemove(CommandSource sender, String[] args) {
 		// silentRemove world x y z
 		if (args.length < 4)
 			return;
@@ -143,21 +143,21 @@ public class QS implements CommandExecutor{
 					e.printStackTrace();
 				}
 			} else {
-				sender.sendMessage(ChatColor.RED + MsgUtil.getMessage("no-permission"));
+				sender.sendMessage(Text.of(Color.RED + MsgUtil.getMessage("no-permission"));
 			}
 			return;
 		}
 	}
 	@SuppressWarnings("unused")
-	private void export(CommandSender sender, String[] args) {
+	private void export(CommandSource sender, String[] args) {
 		if (args.length < 2) {
-			sender.sendMessage(ChatColor.RED + "Usage: /qs export mysql|sqlite");
+			sender.sendMessage(Text.of(Color.RED + "Usage: /qs export mysql|sqlite");
 			return;
 		}
 		String type = args[1].toLowerCase();
 		if (type.startsWith("mysql")) {
 			if (plugin.getDB().getCore() instanceof MySQLCore) {
-				sender.sendMessage(ChatColor.RED + "Database is already MySQL");
+				sender.sendMessage(Text.of(Color.RED + "Database is already MySQL");
 				return;
 			}
 			ConfigurationSection cfg = plugin.getConfig().getConfigurationSection("database");
@@ -171,44 +171,44 @@ public class QS implements CommandExecutor{
 			try {
 				target = new Database(core);
 				QuickShop.instance.getDB().copyTo(target);
-				sender.sendMessage(ChatColor.GREEN + "Success - Exported to MySQL " + user + "@" + host + "." + name);
+				sender.sendMessage(Text.of(Color.GREEN + "Success - Exported to MySQL " + user + "@" + host + "." + name);
 			} catch (Exception e) {
 				e.printStackTrace();
-				sender.sendMessage(ChatColor.RED + "Failed to export to MySQL " + user + "@" + host + "." + name
-						+ ChatColor.DARK_RED + " Reason: " + e.getMessage());
+				sender.sendMessage(Text.of(Color.RED + "Failed to export to MySQL " + user + "@" + host + "." + name
+						+ Color.DARK_RED + " Reason: " + e.getMessage());
 			}
 			return;
 		}
 		if (type.startsWith("sql") || type.contains("file")) {
 			if (plugin.getDB().getCore() instanceof SQLiteCore) {
-				sender.sendMessage(ChatColor.RED + "Database is already SQLite");
+				sender.sendMessage(Text.of(Color.RED + "Database is already SQLite");
 				return;
 			}
 			File file = new File(plugin.getDataFolder(), "shops.db");
 			if (file.exists()) {
 				if (file.delete() == false) {
-					sender.sendMessage(
-							ChatColor.RED + "Warning: Failed to delete old shops.db file. This may cause errors.");
+					sender.sendMessage(Text.of(
+							Color.RED + "Warning: Failed to delete old shops.db file. This may cause errors.");
 				}
 			}
 			SQLiteCore core = new SQLiteCore(file);
 			try {
 				Database target = new Database(core);
 				QuickShop.instance.getDB().copyTo(target);
-				sender.sendMessage(ChatColor.GREEN + "Success - Exported to SQLite: " + file.toString());
+				sender.sendMessage(Text.of(Color.GREEN + "Success - Exported to SQLite: " + file.toString());
 			} catch (Exception e) {
 				e.printStackTrace();
-				sender.sendMessage(ChatColor.RED + "Failed to export to SQLite: " + file.toString() + " Reason: "
+				sender.sendMessage(Text.of(Color.RED + "Failed to export to SQLite: " + file.toString() + " Reason: "
 						+ e.getMessage());
 			}
 			return;
 		}
-		sender.sendMessage(ChatColor.RED + "No target given. Usage: /qs export mysql|sqlite");
+		sender.sendMessage(Text.of(Color.RED + "No target given. Usage: /qs export mysql|sqlite");
 	}
-	private void setOwner(CommandSender sender, String[] args) {
+	private void setOwner(CommandSource sender, String[] args) {
 		if (sender instanceof Player && sender.hasPermission("quickshop.setowner")) {
 			if (args.length < 2) {
-				sender.sendMessage(MsgUtil.getMessage("command.no-owner-given"));
+				sender.sendMessage(Text.of(MsgUtil.getMessage("command.no-owner-given"));
 				return;
 			}
 			BlockIterator bIt = new BlockIterator((Player) sender, 10);
@@ -220,29 +220,29 @@ public class QS implements CommandExecutor{
 					OfflinePlayer p = this.plugin.getServer().getOfflinePlayer(args[1]);
 					shop.setOwner(p.getUniqueId());
 					shop.update();
-					sender.sendMessage(MsgUtil.getMessage("command.new-owner",
+					sender.sendMessage(Text.of(MsgUtil.getMessage("command.new-owner",
 							this.plugin.getServer().getOfflinePlayer(shop.getOwner()).getName()));
 					return;
 				}
 			}
-			sender.sendMessage(MsgUtil.getMessage("not-looking-at-shop"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("not-looking-at-shop"));
 			return;
 		} else {
-			sender.sendMessage(MsgUtil.getMessage("no-permission"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission"));
 			return;
 		}
 	}
-	private void refill(CommandSender sender, String[] args) {
+	private void refill(CommandSource sender, String[] args) {
 		if (sender instanceof Player && sender.hasPermission("quickshop.refill")) {
 			if (args.length < 2) {
-				sender.sendMessage(MsgUtil.getMessage("command.no-amount-given"));
+				sender.sendMessage(Text.of(MsgUtil.getMessage("command.no-amount-given"));
 				return;
 			}
 			int add;
 			try {
 				add = Integer.parseInt(args[1]);
 			} catch (NumberFormatException e) {
-				sender.sendMessage(MsgUtil.getMessage("thats-not-a-number"));
+				sender.sendMessage(Text.of(MsgUtil.getMessage("thats-not-a-number"));
 				return;
 			}
 			BlockIterator bIt = new BlockIterator((LivingEntity) (Player) sender, 10);
@@ -251,18 +251,18 @@ public class QS implements CommandExecutor{
 				Shop shop = plugin.getShopManager().getShop(b.getLocation());
 				if (shop != null) {
 					shop.add(shop.getItem(), add);
-					sender.sendMessage(MsgUtil.getMessage("refill-success"));
+					sender.sendMessage(Text.of(MsgUtil.getMessage("refill-success"));
 					return;
 				}
 			}
-			sender.sendMessage(MsgUtil.getMessage("not-looking-at-shop"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("not-looking-at-shop"));
 			return;
 		} else {
-			sender.sendMessage(MsgUtil.getMessage("no-permission"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission"));
 			return;
 		}
 	}
-	private void silentEmpty(CommandSender sender, String[] args) {
+	private void silentEmpty(CommandSource sender, String[] args) {
 		if (sender.hasPermission("quickshop.refill")) {
 
 			Shop shop = plugin.getShopManager().getShop(new Location(Bukkit.getWorld(args[1]), Integer.valueOf(args[2]),
@@ -272,17 +272,17 @@ public class QS implements CommandExecutor{
 					ContainerShop cs = (ContainerShop) shop;
 					cs.getInventory().clear();
 					MsgUtil.sendControlPanelInfo(sender, shop);
-					sender.sendMessage(MsgUtil.getMessage("empty-success"));
+					sender.sendMessage(Text.of(MsgUtil.getMessage("empty-success"));
 					return;
 				}
 			}
 
 		} else {
-			sender.sendMessage(MsgUtil.getMessage("no-permission"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission"));
 			return;
 		}
 	}
-	private void empty(CommandSender sender, String[] args) {
+	private void empty(CommandSource sender, String[] args) {
 		if (sender instanceof Player && sender.hasPermission("quickshop.refill")) {
 			BlockIterator bIt = new BlockIterator((LivingEntity) (Player) sender, 10);
 			while (bIt.hasNext()) {
@@ -292,25 +292,25 @@ public class QS implements CommandExecutor{
 					if (shop instanceof ContainerShop) {
 						ContainerShop cs = (ContainerShop) shop;
 						cs.getInventory().clear();
-						sender.sendMessage(MsgUtil.getMessage("empty-success"));
+						sender.sendMessage(Text.of(MsgUtil.getMessage("empty-success"));
 						return;
 					} else {
-						sender.sendMessage(MsgUtil.getMessage("not-looking-at-shop"));
+						sender.sendMessage(Text.of(MsgUtil.getMessage("not-looking-at-shop"));
 						return;
 					}
 				}
 			}
-			sender.sendMessage(MsgUtil.getMessage("not-looking-at-shop"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("not-looking-at-shop"));
 			return;
 		} else {
-			sender.sendMessage(MsgUtil.getMessage("no-permission"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission"));
 			return;
 		}
 	}
-	private void find(CommandSender sender, String[] args) {
+	private void find(CommandSource sender, String[] args) {
 		if (sender instanceof Player && sender.hasPermission("quickshop.find")) {
 			if (args.length < 2) {
-				sender.sendMessage(MsgUtil.getMessage("command.no-type-given"));
+				sender.sendMessage(Text.of(MsgUtil.getMessage("command.no-type-given"));
 				return;
 			}
 			StringBuilder sb = new StringBuilder(args[1]);
@@ -342,27 +342,27 @@ public class QS implements CommandExecutor{
 				}
 			}
 			if (closest == null) {
-				sender.sendMessage(MsgUtil.getMessage("no-nearby-shop", args[1]));
+				sender.sendMessage(Text.of(MsgUtil.getMessage("no-nearby-shop", args[1]));
 				return;
 			}
 			Location lookat = closest.getLocation().clone().add(0.5, 0.5, 0.5);
 			// Hack fix to make /qs find not used by /back
 			p.teleport(this.lookAt(loc, lookat).add(0, -1.62, 0), TeleportCause.UNKNOWN);
-			p.sendMessage(
-					MsgUtil.getMessage("nearby-shop-this-way", "" + (int) Math.floor(Math.sqrt(minDistanceSquared))));
+			p.sendMessage(Text.of(
+					MsgUtil.getMessage("nearby-shop-this-way", "" + (int) Math.floor(Math.sqrt(minDistanceSquared)))));
 			return;
 		} else {
-			sender.sendMessage(MsgUtil.getMessage("no-permission"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission")));
 			return;
 		}
 	}
-	private void create(CommandSender sender, String[] args) {
+	private void create(CommandSource sender, String[] args) {
 		if (sender instanceof Player) {
 			Player p = (Player) sender;
 			ItemStack item = p.getInventory().getItemInMainHand();
-			if (item.getType() != Material.AIR) {
+			if (item.getType() != ItemTypes.AIR) {
 				if (sender.hasPermission("quickshop.create.sell")) {
-					BlockIterator bIt = new BlockIterator((LivingEntity) (Player) sender, 10);
+					BlockIterator bIt = new BlockIterator((Living) (Player) sender, 10);
 
 					while (bIt.hasNext()) {
 						Block b = bIt.next();
@@ -408,35 +408,35 @@ public class QS implements CommandExecutor{
 						}
 					}
 				} else {
-					sender.sendMessage(MsgUtil.getMessage("no-permission"));
+					sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission")));
 				}
 			} else {
-				sender.sendMessage(MsgUtil.getMessage("no-anythings-in-your-hand"));
+				sender.sendMessage(Text.of(MsgUtil.getMessage("no-anythings-in-your-hand")));
 			}
 		} else {
-			sender.sendMessage("This command can't be run by console");
+			sender.sendMessage(Text.of("This command can't be run by console"));
 		}
 		return;
 	}
-	private void amount(CommandSender sender, String[] args) {
+	private void amount(CommandSource sender, String[] args) {
 		if (args.length < 2) {
-			sender.sendMessage("Missing amount");
+			sender.sendMessage(Text.of("Missing amount"));
 			return;
 		}
 
 		if (sender instanceof Player) {
 			final Player player = (Player) sender;
 			if (!plugin.getShopManager().getActions().containsKey(player.getUniqueId())) {
-				sender.sendMessage("You do not have any pending action!");
+				sender.sendMessage(Text.of("You do not have any pending action!"));
 				return;
 			}
 			plugin.getShopManager().handleChat(player, args[1]);
 		} else {
-			sender.sendMessage("This command can't be run by console");
+			sender.sendMessage(Text.of("This command can't be run by console"));
 		}
 		return;
 	}
-	private void silentBuy(CommandSender sender, String[] args) {
+	private void silentBuy(CommandSource sender, String[] args) {
 		if (sender.hasPermission("quickshop.create.buy")) {
 			Shop shop = plugin.getShopManager().getShop(new Location(Bukkit.getWorld(args[1]), Integer.valueOf(args[2]),
 					Integer.valueOf(args[3]), Integer.valueOf(args[4])));
@@ -445,14 +445,14 @@ public class QS implements CommandExecutor{
 				shop.setSignText();
 				shop.update();
 				MsgUtil.sendControlPanelInfo(sender, shop);
-				sender.sendMessage(MsgUtil.getMessage("command.now-buying", shop.getDataName()));
+				sender.sendMessage(Text.of(MsgUtil.getMessage("command.now-buying", shop.getDataName())));
 				return;
 			}
 		}
-		sender.sendMessage(MsgUtil.getMessage("no-permission"));
+		sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission")));
 		return;
 	}
-	private void setBuy(CommandSender sender) {
+	private void setBuy(CommandSource sender) {
 		if (sender instanceof Player && sender.hasPermission("quickshop.create.buy")) {
 			BlockIterator bIt = new BlockIterator((LivingEntity) (Player) sender, 10);
 			while (bIt.hasNext()) {
@@ -462,17 +462,17 @@ public class QS implements CommandExecutor{
 					shop.setShopType(ShopType.BUYING);
 					shop.setSignText();
 					shop.update();
-					sender.sendMessage(MsgUtil.getMessage("command.now-buying", shop.getDataName()));
+					sender.sendMessage(Text.of(MsgUtil.getMessage("command.now-buying", shop.getDataName())));
 					return;
 				}
 			}
-			sender.sendMessage(MsgUtil.getMessage("not-looking-at-shop"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("not-looking-at-shop")));
 			return;
 		}
-		sender.sendMessage(MsgUtil.getMessage("no-permission"));
+		sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission")));
 		return;
 	}
-	private void silentSell(CommandSender sender, String[] args) {
+	private void silentSell(CommandSource sender, String[] args) {
 		if (sender.hasPermission("quickshop.create.sell")) {
 				Shop shop = plugin.getShopManager().getShop(new Location(Bukkit.getWorld(args[1]),
 						Integer.valueOf(args[2]), Integer.valueOf(args[3]), Integer.valueOf(args[4])));
@@ -481,15 +481,15 @@ public class QS implements CommandExecutor{
 					shop.setSignText();
 					shop.update();
 					MsgUtil.sendControlPanelInfo(sender, shop);
-					sender.sendMessage(MsgUtil.getMessage("command.now-selling", shop.getDataName()));
+					sender.sendMessage(Text.of(MsgUtil.getMessage("command.now-selling", shop.getDataName())));
 					return;
 				}
 			
 		}
-		sender.sendMessage(MsgUtil.getMessage("no-permission"));
+		sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission")));
 		return;
 	}
-	private void setSell(CommandSender sender) {
+	private void setSell(CommandSource sender) {
 		if (sender instanceof Player && sender.hasPermission("quickshop.create.sell")) {
 			BlockIterator bIt = new BlockIterator((LivingEntity) (Player) sender, 10);
 			while (bIt.hasNext()) {
@@ -499,40 +499,40 @@ public class QS implements CommandExecutor{
 					shop.setShopType(ShopType.SELLING);
 					shop.setSignText();
 					shop.update();
-					sender.sendMessage(MsgUtil.getMessage("command.now-selling", shop.getDataName()));
+					sender.sendMessage(Text.of(MsgUtil.getMessage("command.now-selling", shop.getDataName())));
 					return;
 				}
 			}
-			sender.sendMessage(MsgUtil.getMessage("not-looking-at-shop"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("not-looking-at-shop")));
 			return;
 		}
-		sender.sendMessage(MsgUtil.getMessage("no-permission"));
+		sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission")));
 		return;
 	}
-	private void setPrice(CommandSender sender, String[] args) {
+	private void setPrice(CommandSource sender, String[] args) {
 		if (sender instanceof Player && sender.hasPermission("quickshop.create.changeprice")) {
 			Player p = (Player) sender;
 			if (args.length < 2) {
-				sender.sendMessage(MsgUtil.getMessage("no-price-given"));
+				sender.sendMessage(Text.of(MsgUtil.getMessage("no-price-given")));
 				return;
 			}
 			double price;
 			try {
 				price = Double.parseDouble(args[1]);
 			} catch (NumberFormatException e) {
-				sender.sendMessage(MsgUtil.getMessage("thats-not-a-number"));
+				sender.sendMessage(Text.of(MsgUtil.getMessage("thats-not-a-number")));
 				return;
 			}
 			if (price < 0.01) {
-				sender.sendMessage(MsgUtil.getMessage("price-too-cheap"));
+				sender.sendMessage(Text.of(MsgUtil.getMessage("price-too-cheap")));
 				return;
 			}
 			double fee = 0;
 			if (plugin.priceChangeRequiresFee) {
 				fee = plugin.getConfig().getDouble("shop.fee-for-price-change");
 				if (fee > 0 && plugin.getEcon().getBalance(p.getUniqueId()) < fee) {
-					sender.sendMessage(
-							MsgUtil.getMessage("you-cant-afford-to-change-price", plugin.getEcon().format(fee)));
+					sender.sendMessage(Text.of(
+							MsgUtil.getMessage("you-cant-afford-to-change-price", plugin.getEcon().format(fee))));
 					return;
 				}
 			}
@@ -545,17 +545,17 @@ public class QS implements CommandExecutor{
 						|| sender.hasPermission("quickshop.other.price"))) {
 					if (shop.getPrice() == price) {
 						// Stop here if there isn't a price change
-						sender.sendMessage(MsgUtil.getMessage("no-price-change"));
+						sender.sendMessage(Text.of(MsgUtil.getMessage("no-price-change")));
 						return;
 					}
 					if (fee > 0) {
 						if (!plugin.getEcon().withdraw(p.getUniqueId(), fee)) {
-							sender.sendMessage(MsgUtil.getMessage("you-cant-afford-to-change-price",
-									plugin.getEcon().format(fee)));
+							sender.sendMessage(Text.of(MsgUtil.getMessage("you-cant-afford-to-change-price",
+									plugin.getEcon().format(fee))));
 							return;
 						}
-						sender.sendMessage(
-								MsgUtil.getMessage("fee-charged-for-price-change", plugin.getEcon().format(fee)));
+						sender.sendMessage(Text.of(
+								MsgUtil.getMessage("fee-charged-for-price-change", plugin.getEcon().format(fee))));
 						try {
 							for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
 								if (player.getName().equals(plugin.getConfig().getString("tax-account"))) {
@@ -573,7 +573,7 @@ public class QS implements CommandExecutor{
 					shop.setPrice(price);
 					shop.setSignText();
 					shop.update();
-					sender.sendMessage(MsgUtil.getMessage("price-is-now", plugin.getEcon().format(shop.getPrice())));
+					sender.sendMessage(Text.of(MsgUtil.getMessage("price-is-now", plugin.getEcon().format(shop.getPrice()))));
 					// Chest shops can be double shops.
 					if (shop instanceof ContainerShop) {
 						ContainerShop cs = (ContainerShop) shop;
@@ -581,12 +581,12 @@ public class QS implements CommandExecutor{
 							Shop nextTo = cs.getAttachedShop();
 							if (cs.isSelling()) {
 								if (cs.getPrice() < nextTo.getPrice()) {
-									sender.sendMessage(MsgUtil.getMessage("buying-more-than-selling"));
+									sender.sendMessage(Text.of(MsgUtil.getMessage("buying-more-than-selling")));
 								}
 							} else {
 								// Buying
 								if (cs.getPrice() > nextTo.getPrice()) {
-									sender.sendMessage(MsgUtil.getMessage("buying-more-than-selling"));
+									sender.sendMessage(Text.of(MsgUtil.getMessage("buying-more-than-selling")));
 								}
 							}
 						}
@@ -594,15 +594,15 @@ public class QS implements CommandExecutor{
 					return;
 				}
 			}
-			sender.sendMessage(MsgUtil.getMessage("not-looking-at-shop"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("not-looking-at-shop")));
 			return;
 		}
-		sender.sendMessage(MsgUtil.getMessage("no-permission"));
+		sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission")));
 		return;
 	}
-	private void clean(CommandSender sender) {
+	private void clean(CommandSource sender) {
 		if (sender.hasPermission("quickshop.clean")) {
-			sender.sendMessage(MsgUtil.getMessage("command.cleaning"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("command.cleaning")));
 			Iterator<Shop> shIt = plugin.getShopManager().getShopIterator();
 			int i = 0;
 			while (shIt.hasNext()) {
@@ -623,34 +623,34 @@ public class QS implements CommandExecutor{
 				}
 			}
 			MsgUtil.clean();
-			sender.sendMessage(MsgUtil.getMessage("command.cleaned", "" + i));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("command.cleaned", "" + i)));
 			return;
 		}
-		sender.sendMessage(MsgUtil.getMessage("no-permission"));
+		sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission")));
 		return;
 	}
-	private void about(CommandSender sender) {
-		sender.sendMessage("[QuickShop] About QuickShop");
-		sender.sendMessage("[QuickShop] Hello, I'm Ghost_chu Author of QS reremake.");
-		sender.sendMessage("[QuickShop] This plugin is remake by SunnySide Community.");
-		sender.sendMessage("[QuickShop] Original author is KaiNoMood. This is QS unofficial version.");
-		sender.sendMessage("[QuickShop] Have more feature, and design for 1.13 and higher version.");
-		sender.sendMessage("[QuickShop] You can see our SpigotMC page to read more:");
-		sender.sendMessage("[QuickShop] https://www.spigotmc.org/resources/quickshop-reremake-for-1-13.62575/");
-		sender.sendMessage("[QuickShop] Thanks for use QuickShop-Reremake.");
+	private void about(CommandSource sender) {
+		sender.sendMessage(Text.of("[QuickShop] About QuickShop"));
+		sender.sendMessage(Text.of("[QuickShop] Hello, I'm Ghost_chu Author of QS reremake."));
+		sender.sendMessage(Text.of("[QuickShop] This plugin is remake by SunnySide Community."));
+		sender.sendMessage(Text.of("[QuickShop] Original author is KaiNoMood. This is QS unofficial version."));
+		sender.sendMessage(Text.of("[QuickShop] Have more feature, and design for 1.13 and higher version."));
+		sender.sendMessage(Text.of("[QuickShop] You can see our SpigotMC page to read more:"));
+		sender.sendMessage(Text.of("[QuickShop] https://www.spigotmc.org/resources/quickshop-reremake-for-1-13.62575/"));
+		sender.sendMessage(Text.of("[QuickShop] Thanks for use QuickShop-Reremake."));
 	}
-	private void reload(CommandSender sender) {
+	private void reload(CommandSource sender) {
 		if (sender.hasPermission("quickshop.reload")) {
-			sender.sendMessage(MsgUtil.getMessage("command.reloading"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("command.reloading")));
 			Bukkit.getPluginManager().disablePlugin(plugin);
 			Bukkit.getPluginManager().enablePlugin(plugin);
 			return;
 		}
-		sender.sendMessage(MsgUtil.getMessage("no-permission"));
+		sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission")));
 		return;
 	}
 	@Override
-	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
+	public boolean onCommand(CommandSource sender, Command cmd, String commandLabel, String[] args) {
 		if (args.length > 0) {
 			String subArg = args[0].toLowerCase();
 			if (subArg.equals("unlimited")) {
@@ -735,22 +735,22 @@ public class QS implements CommandExecutor{
 		sendHelp(sender);
 		return true;
 	}
-	private void debug(CommandSender sender, String[] args) {
+	private void debug(CommandSource sender, String[] args) {
 		boolean debug = plugin.getConfig().getBoolean("dev-mode");
 		if(debug) {
 			plugin.getConfig().set("dev-mode", false);
 			plugin.saveConfig();
-			sender.sendMessage(MsgUtil.getMessage("command.now-nolonger-debuging"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("command.now-nolonger-debuging")));
 			reload(sender);
 		}else {
 			plugin.getConfig().set("dev-mode", true);
 			plugin.saveConfig();
-			sender.sendMessage(MsgUtil.getMessage("command.now-debuging"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("command.now-debuging")));
 			reload(sender);
 		}
 	}
 
-	private void info(CommandSender sender, String[] args) {
+	private void info(CommandSource sender, String[] args) {
 		if (sender.hasPermission("quickshop.info")) {
 			int buying, selling, doubles, chunks, worlds;
 			buying = selling = doubles = chunks = worlds = 0;
@@ -774,20 +774,20 @@ public class QS implements CommandExecutor{
 					}
 				}
 			}
-			sender.sendMessage(ChatColor.RED + "QuickShop Statistics...");
-			sender.sendMessage(ChatColor.GREEN + "" + (buying + selling) + " shops in " + chunks
-					+ " chunks spread over " + worlds + " worlds.");
-			sender.sendMessage(ChatColor.GREEN + "" + doubles + " double shops. ");
-			sender.sendMessage(ChatColor.GREEN + "" + nostock
-					+ " nostock selling shops (excluding doubles) which will be removed by /qs clean.");
-			sender.sendMessage(ChatColor.GREEN + "QuickShop "+QuickShop.getVersion());
+			sender.sendMessage(Text.of(Color.RED + "QuickShop Statistics...")));
+			sender.sendMessage(Text.of(Color.GREEN + "" + (buying + selling) + " shops in " + chunks
+					+ " chunks spread over " + worlds + " worlds.")));
+			sender.sendMessage(Text.of(Color.GREEN + "" + doubles + " double shops. ")));
+			sender.sendMessage(Text.of(Color.GREEN + "" + nostock
+					+ " nostock selling shops (excluding doubles) which will be removed by /qs clean.")));
+			sender.sendMessage(Text.of(Color.GREEN + "QuickShop "+QuickShop.getVersion())));
 		}else {
-			sender.sendMessage(MsgUtil.getMessage("no-permission"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission"))));
 		}	
 	}
 
 
-	private void remover(CommandSender sender, String[] args) {
+	private void remover(CommandSource sender, String[] args) {
 		if (args.length < 5) {
 			return;
 		}
@@ -796,20 +796,20 @@ public class QS implements CommandExecutor{
 			Shop shop = manager.getShop(new Location(Bukkit.getWorld(args[4]), Integer.parseInt(args[1]),
 					Integer.parseInt(args[2]), Integer.parseInt(args[3])));
 			if (shop == null) {
-				sender.sendMessage(MsgUtil.getMessage("shop-not-exist"));
+				sender.sendMessage(Text.of(MsgUtil.getMessage("shop-not-exist")));
 				return;
 			}
 			if(sender instanceof Player) {
 				Player player = (Player)sender;
-				if(!(shop.getOwner()!=player.getUniqueId())&&!(player.hasPermission("quickshop.other.destroy"))) {
-					sender.sendMessage(MsgUtil.getMessage("no-permission"));
+				if(!(shop.getOwner()!=player.getUniqueId())&&!(player.hasPermission("quickshop.other.destroy")))) {
+					sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission")));
 					return;
 				}
 			}
 			DatabaseHelper.removeShop(plugin.getDB(), Integer.parseInt(args[1]), Integer.parseInt(args[2]),
 					Integer.parseInt(args[3]), args[4]);
 			shop.onUnload();
-			sender.sendMessage(MsgUtil.getMessage("success-removed-shop"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("success-removed-shop")));
 		} catch (NumberFormatException | SQLException e) {
 			e.printStackTrace();
 		}
@@ -851,62 +851,105 @@ public class QS implements CommandExecutor{
 		loc.setPitch(pitch * 180f / (float) Math.PI);
 		return loc;
 	}
-	public void sendDebugInfomation(CommandSender s) {
-		s.sendMessage("Running " + plugin.getDescription().getVersion() + " on server "
-				+ plugin.getServer().getVersion() + " for Bukkit " + plugin.getServer().getBukkitVersion());
+	public void sendDebugInfomation(CommandSource s) {
+		s.sendMessage(Text.of("Running " + plugin.getDescription().getVersion() + " on server "
+				+ plugin.getServer().getVersion() + " for Bukkit " + plugin.getServer().getBukkitVersion())));
 		try {
-			s.sendMessage("Database: " + plugin.getDB().getConnection().getMetaData().getDatabaseProductName() + " @ "
-					+ plugin.getDB().getConnection().getMetaData().getDatabaseProductVersion());
+			s.sendMessage(Text.of("Database: " + plugin.getDB().getConnection().getMetaData().getDatabaseProductName() + " @ "
+					+ plugin.getDB().getConnection().getMetaData().getDatabaseProductVersion()));
 		} catch (SQLException e) {
-			s.sendMessage("Database: A error happed when getting data.");
+			s.sendMessage(Text.of("Database: A error happed when getting data.");
 			e.printStackTrace();
 		}
 	}
-	public void sendHelp(CommandSender s) {
+	public void sendHelp(CommandSource s) {
 
-		s.sendMessage(MsgUtil.getMessage("command.description.title"));
+		s.sendMessage(Text.of(MsgUtil.getMessage("command.description.title")));
 		if (s.hasPermission("quickshop.unlimited"))
-			s.sendMessage(ChatColor.GREEN + "/qs unlimited" + ChatColor.YELLOW + " - "
-					+ MsgUtil.getMessage("command.description.unlimited"));
+			s.sendMessage(Text.of(Color.GREEN + "/qs unlimited" + Color.YELLOW + " - "
+					+ MsgUtil.getMessage("command.description.unlimited")));
 		if (s.hasPermission("quickshop.setowner"))
-			s.sendMessage(ChatColor.GREEN + "/qs setowner <player>" + ChatColor.YELLOW + " - "
-					+ MsgUtil.getMessage("command.description.setowner"));
+			s.sendMessage(Text.of(Color.GREEN + "/qs setowner <player>" + Color.YELLOW + " - "
+					+ MsgUtil.getMessage("command.description.setowner")));
 		if (s.hasPermission("quickshop.create.buy"))
-			s.sendMessage(ChatColor.GREEN + "/qs buy" + ChatColor.YELLOW + " - "
-					+ MsgUtil.getMessage("command.description.buy"));
+			s.sendMessage(Text.of(Color.GREEN + "/qs buy" + Color.YELLOW + " - "
+					+ MsgUtil.getMessage("command.description.buy")));
 		if (s.hasPermission("quickshop.create.sell")) {
-			s.sendMessage(ChatColor.GREEN + "/qs sell" + ChatColor.YELLOW + " - "
-					+ MsgUtil.getMessage("command.description.sell"));
-			s.sendMessage(ChatColor.GREEN + "/qs create [price]" + ChatColor.YELLOW + " - "
-					+ MsgUtil.getMessage("command.description.create"));
+			s.sendMessage(Text.of(Color.GREEN + "/qs sell" + Color.YELLOW + " - "
+					+ MsgUtil.getMessage("command.description.sell")));
+			s.sendMessage(Text.of(Color.GREEN + "/qs create [price]" + Color.YELLOW + " - "
+					+ MsgUtil.getMessage("command.description.create")));
 		}
 		if (s.hasPermission("quickshop.create.changeprice"))
-			s.sendMessage(ChatColor.GREEN + "/qs price" + ChatColor.YELLOW + " - "
-					+ MsgUtil.getMessage("command.description.price"));
+			s.sendMessage(Text.of(Color.GREEN + "/qs price" + Color.YELLOW + " - "
+					+ MsgUtil.getMessage("command.description.price")));
 		if (s.hasPermission("quickshop.clean"))
-			s.sendMessage(ChatColor.GREEN + "/qs clean" + ChatColor.YELLOW + " - "
-					+ MsgUtil.getMessage("command.description.clean"));
+			s.sendMessage(Text.of(Color.GREEN + "/qs clean" + Color.YELLOW + " - "
+					+ MsgUtil.getMessage("command.description.clean")));
 		if (s.hasPermission("quickshop.find"))
-			s.sendMessage(ChatColor.GREEN + "/qs find <item>" + ChatColor.YELLOW + " - "
-					+ MsgUtil.getMessage("command.description.find"));
+			s.sendMessage(Text.of(Color.GREEN + "/qs find <item>" + Color.YELLOW + " - "
+					+ MsgUtil.getMessage("command.description.find")));
 		if (s.hasPermission("quickshop.refill"))
-			s.sendMessage(ChatColor.GREEN + "/qs refill <amount>" + ChatColor.YELLOW + " - "
-					+ MsgUtil.getMessage("command.description.refill"));
+			s.sendMessage(Text.of(Color.GREEN + "/qs refill <amount>" + Color.YELLOW + " - "
+					+ MsgUtil.getMessage("command.description.refill")));
 		if (s.hasPermission("quickshop.empty"))
-			s.sendMessage(ChatColor.GREEN + "/qs empty" + ChatColor.YELLOW + " - "
-					+ MsgUtil.getMessage("command.description.empty"));
+			s.sendMessage(Text.of(Color.GREEN + "/qs empty" + Color.YELLOW + " - "
+					+ MsgUtil.getMessage("command.description.empty")));
 		if (s.hasPermission("quickshop.fetchmessage"))
-			s.sendMessage(ChatColor.GREEN + "/qs fetchmessage" + ChatColor.YELLOW + " - "
-					+ MsgUtil.getMessage("command.description.fetchmessage"));
+			s.sendMessage(Text.of(Color.GREEN + "/qs fetchmessage" + Color.YELLOW + " - "
+					+ MsgUtil.getMessage("command.description.fetchmessage")));
 		if (s.hasPermission("quickshop.info"))
-			s.sendMessage(ChatColor.GREEN + "/qs info" + ChatColor.YELLOW + " - "
-					+ MsgUtil.getMessage("command.description.info"));
+			s.sendMessage(Text.of(Color.GREEN + "/qs info" + Color.YELLOW + " - "
+					+ MsgUtil.getMessage("command.description.info")));
 		if (s.hasPermission("quickshop.debug"))
-			s.sendMessage(ChatColor.GREEN + "/qs debug" + ChatColor.YELLOW + " - "
-					+ MsgUtil.getMessage("command.description.debug"));
+			s.sendMessage(Text.of(Color.GREEN + "/qs debug" + Color.YELLOW + " - "
+					+ MsgUtil.getMessage("command.description.debug")));
 //		if (s.hasPermission("quickshop.export"))
-//			s.sendMessage(ChatColor.GREEN + "/qs export mysql|sqlite" + ChatColor.YELLOW + " - "
+//			s.sendMessage(Text.of(Color.GREEN + "/qs export mysql|sqlite" + Color.YELLOW + " - "
 //					+ MsgUtil.getMessage("command.description.export"));
+	}
+
+
+	@Override
+	public CommandResult process(CommandSource source, String arguments) throws CommandException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public List<String> getSuggestions(CommandSource source, String arguments, Location<World> targetPosition)
+			throws CommandException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public boolean testPermission(CommandSource source) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+
+	@Override
+	public Optional<Text> getShortDescription(CommandSource source) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public Optional<Text> getHelp(CommandSource source) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public Text getUsage(CommandSource source) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 }

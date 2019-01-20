@@ -1,32 +1,30 @@
 package org.maxgamer.quickshop.Util;
 
-import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.HoverEvent;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.apache.commons.lang.StringUtils;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.block.BlockState;
-import org.bukkit.configuration.InvalidConfigurationException;
+import org.apache.commons.lang.StringUtilsfigurationException;
+import org.bukkit.configuration.file.YamlC;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.Damageable;
-import org.bukkit.inventory.meta.EnchantmentStorageMeta;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.material.Sign;
-import org.bukkit.potion.PotionEffect;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.InvalidCononfiguration;
 import org.maxgamer.quickshop.QuickShop;
 import org.maxgamer.quickshop.Shop.DisplayItem;
 import org.maxgamer.quickshop.Shop.Shop;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.block.BlockState;
+import org.spongepowered.api.block.tileentity.Sign;
+import org.spongepowered.api.data.manipule;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.item.ItemTypator.mutable.PotionEffectData;
+import org.spongepowered.api.item.enchantment.Enchantment;
+import org.spongepowered.api.item.ItemType;
+import org.spongepowered.api.item.ItemTypes;
+import org.spongepowered.api.item.inventory.Inventory;
+import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.util.Color;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
+
+import net.minecraft.server.MinecraftServer;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -41,9 +39,9 @@ import java.util.Map.Entry;
  *
  */
 public class Util {
-	private static final EnumSet<Material> blacklist = EnumSet.noneOf(Material.class);
-	private static final EnumSet<Material> shoppables = EnumSet.noneOf(Material.class);
-	private static final EnumMap<Material, Entry<Double,Double>> restrictedPrices = new EnumMap<Material, Entry<Double,Double>>(Material.class);
+	private static final ArrayList<ItemType> blacklist = new ArrayList<>();
+	private static final ArrayList<ItemType> shoppables = new ArrayList<>();
+	private static final Map<ItemType, Entry<Double,Double>> restrictedPrices = new HashMap<>();
 	private static QuickShop plugin;
 	private static Method storageContents;
 	static Map<UUID, Long> timerMap = new HashMap<UUID, Long>();
@@ -54,6 +52,9 @@ public class Util {
 			return "Disabled";
 		}
 	}
+	public static ItemType matchItemType(String item) {
+		return Sponge.getGame().getRegistry().getType(ItemType.class, item).get();
+	}
 	public static void initialize() {
 		blacklist.clear();
 		shoppables.clear();
@@ -61,10 +62,11 @@ public class Util {
 
 		plugin = QuickShop.instance;
 		for (String s : plugin.getConfig().getStringList("shop-blocks")) {
-			Material mat = Material.matchMaterial(s.toUpperCase());
+			ItemType mat = Util.matchItemType(s.toUpperCase());
+			
 			if (mat == null) {
 				try {
-					mat = Material.matchMaterial(s);
+					mat = Util.matchItemType(s);
 				} catch (NumberFormatException e) {
 				}
 			}
@@ -76,9 +78,9 @@ public class Util {
 		}
 		List<String> configBlacklist = plugin.getConfig().getStringList("blacklist");
 		for (String s : configBlacklist) {
-			Material mat = Material.getMaterial(s.toUpperCase());
+			ItemType mat = matchItemType(s.toUpperCase());
 			if (mat == null) {
-				mat = Material.matchMaterial(s);
+				mat = matchItemType(s);
 				if (mat == null) {
 					plugin.getLogger().info(s + " is not a valid material.  Check your spelling or ID");
 					continue;
@@ -91,7 +93,7 @@ public class Util {
 			String[] sp = s.split(";");
 			if (sp.length==3) {
 				try {
-					Material mat = Material.matchMaterial(sp[0]);
+					ItemType mat = Util.matchItemType(sp[0]);
 					if (mat == null) {
 						throw new Exception();
 					}
@@ -115,13 +117,8 @@ public class Util {
 	}
 
 	/** Return an entry with min and max prices, but null if there isn't a price restriction */
-	public static Entry<Double,Double> getPriceRestriction(Material material) {
+	public static Entry<Double,Double> getPriceRestriction(ItemType material) {
 		return restrictedPrices.get(material);
-	}
-	@SuppressWarnings("deprecation")
-	public static boolean isTransparent(Material m) {
-		boolean trans = m.isTransparent();
-		return trans;
 	}
 
 	public static void parseColours(YamlConfiguration config) {
@@ -131,7 +128,7 @@ public class Util {
 			if (filtered.startsWith("MemorySection")) {
 				continue;
 			}
-			filtered = ChatColor.translateAlternateColorCodes('&', filtered);
+			filtered.replaceAll("&", "§")
 			config.set(key, filtered);
 		}
 	}
@@ -142,12 +139,12 @@ public class Util {
 	 * @param b The block to check, Possibly a chest, dispenser, etc. player The player, can be null if onlyCheck=true, onlyCheck The option to disable check AreaShop use player.
 	 * @return True if it can be made into a shop, otherwise false.
 	 */
-	public static boolean canBeShop(Block b,UUID player, boolean onlyCheck) {
+	public static boolean canBeShop(BlockState b,UUID player, boolean onlyCheck) {
 		BlockState bs = b.getState();
-		if ((bs instanceof InventoryHolder == false) && b.getState().getType() != Material.ENDER_CHEST) {
+		if ((bs instanceof InventoryHolder == false) && b.getState().getType() != ItemType.ENDER_CHEST) {
 			return false;
 		}
-		if (b.getState().getType() == Material.ENDER_CHEST) {
+		if (b.getState().getType() == ItemType.ENDER_CHEST) {
 			if (plugin.openInvPlugin == null) {
 				Util.debugLog("OpenInv not loaded");
 				return false;
@@ -181,15 +178,16 @@ public class Util {
 	 *            The chest to check.
 	 * @return the block which is also a chest and connected to b.
 	 */
-	public static Block getSecondHalf(Block b) {
-		if (b.getType() != Material.CHEST && b.getType() != Material.TRAPPED_CHEST)
+	public static BlockState getSecondHalf(BlockState b) {
+		if (b.getType() != ItemTypes.CHEST && b.getType() != ItemTypes.TRAPPED_CHEST)
 			return null;
-		Block[] blocks = new Block[4];
+		BlockState[] blocks = new BlockState[4];
 		blocks[0] = b.getRelative(1, 0, 0);
+		b.ge
 		blocks[1] = b.getRelative(-1, 0, 0);
 		blocks[2] = b.getRelative(0, 0, 1);
 		blocks[3] = b.getRelative(0, 0, -1);
-		for (Block c : blocks) {
+		for (BlockState c : blocks) {
 			if (c.getType() == b.getType()) {
 				return c;
 			}
@@ -206,20 +204,20 @@ public class Util {
 	 *            The player performing the action.
 	 * @return true if a nearby shop was found, false otherwise.
 	 */
-	public static boolean isOtherShopWithinHopperReach(Block b, Player p) {
+	public static boolean isOtherShopWithinHopperReach(BlockState b, Player p) {
 		// Check 5 relative positions that can be affected by a hopper: behind, in front of, to the right,
 		// to the left and underneath.
-		Block[] blocks = new Block[5];
+		BlockState[] blocks = new BlockState[5];
 		blocks[0] = b.getRelative(0, 0, -1);
 		blocks[1] = b.getRelative(0, 0, 1);
 		blocks[2] = b.getRelative(1, 0, 0);
 		blocks[3] = b.getRelative(-1, 0, 0);
 		blocks[4] = b.getRelative(0, 1, 0);
-		for (Block c : blocks) {
+		for (BlockState c : blocks) {
 			Shop firstShop = plugin.getShopManager().getShop(c.getLocation());
 			// If firstShop is null but is container, it can be used to drain contents from a shop created
 			// on secondHalf.
-			Block secondHalf = getSecondHalf(c);
+			BlockState secondHalf = getSecondHalf(c);
 			Shop secondShop = secondHalf == null ? null : plugin.getShopManager().getShop(secondHalf.getLocation());
 			if (firstShop != null && !p.getUniqueId().equals(firstShop.getOwner())
 					|| secondShop != null && !p.getUniqueId().equals(secondShop.getOwner())) {
@@ -264,7 +262,7 @@ public class Util {
 //		if (NMS.isPotion(itemStack.getType())) {
 //			return CustomPotionsName.getFullName(itemStack);
 //		}		
-		String vanillaName = itemStack.getType().name();
+		String vanillaName = itemStack.getType().getName();
 		return prettifyText(vanillaName);
 	}
 
@@ -300,9 +298,8 @@ public class Util {
 //			return CustomPotionsName.getSignName(itemStack);
 //		}
 		
-		ItemStack is = itemStack.clone();
-		is.setAmount(1);
-		
+		ItemStack is = itemStack.copy();
+		is.setAmount(1);		
 		if(is.hasItemMeta()) {
 			if(is.getItemMeta().hasDisplayName()) {
 				return is.getItemMeta().getDisplayName();
@@ -373,7 +370,7 @@ public class Util {
 	 * @return Returns true if the item is a tool (Has durability) or false if
 	 *         it doesn't.
 	 */
-	public static boolean isTool(Material mat) {
+	public static boolean isTool(ItemType mat) {
 		if(mat.getMaxDurability()==0){
 			return false;
 		}else{
@@ -388,7 +385,7 @@ public class Util {
 	 *            The first item stack
 	 * @param stack2
 	 *            The second item stack
-	 * @return true if the itemstacks match. (Material, durability, enchants, name)
+	 * @return true if the itemstacks match. (ItemType, durability, enchants, name)
 	 */
 	public static boolean matches(ItemStack stack1, ItemStack stack2) {
 		if (stack1 == stack2)
@@ -449,7 +446,7 @@ public class Util {
 	 *            The material to check if it is blacklisted
 	 * @return true if the material is black listed. False if not.
 	 */
-	public static boolean isBlacklisted(Material m) {
+	public static boolean isBlacklisted(ItemType m) {
 		return blacklist.contains(m);
 	}
 
@@ -460,7 +457,7 @@ public class Util {
 	 *            The sign which is attached
 	 * @return The block the sign is attached to
 	 */
-	public static Block getAttached(Block b) {
+	public static BlockState getAttached(BlockState b) {
 		try {
 			Sign sign = (Sign) b.getState().getData(); // Throws a NPE
 			// sometimes??
@@ -502,7 +499,7 @@ public class Util {
 	 * @param inv
 	 *            The inventory to count
 	 * @param item
-	 *            The item prototype. Material, durabiltiy and enchants must
+	 *            The item prototype. ItemType, durabiltiy and enchants must
 	 *            match for 'stackability' to occur.
 	 * @return The number of items that can be given to the inventory safely.
 	 */
@@ -512,7 +509,7 @@ public class Util {
 		try {
 			ItemStack[] contents = (ItemStack[])storageContents.invoke(inv);
 			for (ItemStack iStack : contents) {
-				if (iStack == null || iStack.getType() == Material.AIR) {
+				if (iStack == null || iStack.getType() == ItemType.AIR) {
 					space += item.getMaxStackSize();
 				} else if (matches(item, iStack)) {
 					space += item.getMaxStackSize() - iStack.getAmount();
@@ -645,7 +642,7 @@ public class Util {
 			Itemenchs = null;
 		}
 		if(Itemname!=MsgUtil.getItemi18n(itemStack.getType().name())) {
-			finalItemdata = Itemname+" "+ChatColor.GRAY+"("+MsgUtil.getItemi18n(itemStack.getType().name())+ChatColor.GRAY+")";
+			finalItemdata = Itemname+" "+Color.GRAY+"("+MsgUtil.getItemi18n(itemStack.getType().name())+Color.GRAY+")";
 		}else {
 			finalItemdata = Itemname;
 		}
@@ -656,7 +653,7 @@ public class Util {
 		a.addAll(Itemenchs.keySet());
 		b.addAll(Itemenchs.values());
 		for (int i = 0; i < a.size(); i++) {
-			finalItemdata += ChatColor.GRAY + a.get(i) + " " + Util.formatEnchLevel(b.get(i)) + "\n";
+			finalItemdata += Color.GRAY + a.get(i) + " " + Util.formatEnchLevel(b.get(i)) + "\n";
 		}
 		
 		String potionResult = getPotiondata(itemStack);
@@ -666,7 +663,7 @@ public class Util {
 
 		if (Itemlore != null) {
 			for (String string : Itemlore) {
-				finalItemdata += ChatColor.DARK_PURPLE +""+ ChatColor.ITALIC + string + "\n";
+				finalItemdata += Color.DARK_PURPLE +""+ Color.ITALIC + string + "\n";
 			}
 		}
 		TextComponent normalmessage = new TextComponent(normalText+"   "+MsgUtil.getMessage("menu.preview"));
@@ -696,71 +693,56 @@ public class Util {
 
 	}
 	}
-	/**
-	 * @param iStack
-	 */
-	public static String getPotiondata(ItemStack iStack) {
-		if((iStack.getType() != Material.POTION)==true && (iStack.getType() !=Material.LINGERING_POTION)==true && (iStack.getType() !=Material.SPLASH_POTION)==true){
-			return null;
-		}
-		List<String> pEffects =  new ArrayList<String>();
-		PotionMeta pMeta = (PotionMeta)iStack.getItemMeta();
-		if(pMeta.getBasePotionData().getType()!=null) {
-			if(!(pMeta.getBasePotionData().isUpgraded())){
-				pEffects.add(ChatColor.BLUE+MsgUtil.getPotioni18n(pMeta.getBasePotionData().getType().getEffectType()));
-			}else {
-				pEffects.add(ChatColor.BLUE+MsgUtil.getPotioni18n(pMeta.getBasePotionData().getType().getEffectType())+" II");
-			}
-			
-		}
-		if(pMeta.hasCustomEffects()) {
-			List<PotionEffect> cEffects = pMeta.getCustomEffects();
-			for (PotionEffect potionEffect : cEffects) {
-				pEffects.add(MsgUtil.getPotioni18n(potionEffect.getType())+" "+formatEnchLevel(potionEffect.getAmplifier()));
-			}
-		}
-		if(pEffects != null && pEffects.isEmpty() == false) {
-			String result = new String();
-			for (String effectString : pEffects) {
-				result+=effectString+"\n";
-			}
-			return result;
-		}else {
-		return null;
-		} 
-	}
+//	/**
+//	 * @param iStack
+//	 */
+//	public static String getPotiondata(ItemStack iStack) {
+//		if((iStack.getType() != ItemTypes.POTION)==true && (iStack.getType() !=ItemTypes.LINGERING_POTION)==true && (iStack.getType() !=ItemTypes.SPLASH_POTION)==true){
+//			return null;
+//		}
+//		List<String> pEffects =  new ArrayList<String>();
+//		Optional<PotionEffectData> pMeta = iStack.get(PotionEffectData.class);
+//		if(pMeta.get().getType()!=null) {
+//			if(!(pMeta.getBasePotionData().isUpgraded())){
+//				pEffects.add(Color.BLUE+MsgUtil.getPotioni18n(pMeta.getBasePotionData().getType().getEffectType()));
+//			}else {
+//				pEffects.add(Color.BLUE+MsgUtil.getPotioni18n(pMeta.getBasePotionData().getType().getEffectType())+" II");
+//			}
+//			
+//		}
+//		if(pMeta.hasCustomEffects()) {
+//			List<PotionEffect> cEffects = pMeta.getCustomEffects();
+//			for (PotionEffect potionEffect : cEffects) {
+//				pEffects.add(MsgUtil.getPotioni18n(potionEffect.getType())+" "+formatEnchLevel(potionEffect.getAmplifier()));
+//			}
+//		}
+//		if(pEffects != null && pEffects.isEmpty() == false) {
+//			String result = new String();
+//			for (String effectString : pEffects) {
+//				result+=effectString+"\n";
+//			}
+//			return result;
+//		}else {
+//		return null;
+//		} 
+//	}
 	/**
 	 * Send warning message when some plugin calling deprecated method... 
 	 * @return
 	 */
 	public static void sendDeprecatedMethodWarn() {
-		QuickShop.instance.getLogger().warning("Some plugin calling Deprecated method, Please contact author to use new api!");
+		QuickShop.instance.getLogger().warn("Some plugin calling Deprecated method, Please contact author to use new api!");
 	}
 	/**
 	 * Check QuickShop is running on dev mode or not.
 	 * @return
 	 */
 	public static boolean isDevEdition() {
-		if(QuickShop.instance.getDescription().getVersion().contains("dev")||QuickShop.instance.getDescription().getVersion().contains("alpha")||QuickShop.instance.getDescription().getVersion().contains("beta")||QuickShop.instance.getDescription().getVersion().contains("snapshot")) {
+		if(QuickShop.instance.getVersion().contains("dev")||QuickShop.instance.getVersion().contains("alpha")||QuickShop.instance.getVersion().contains("beta")||QuickShop.instance.getVersion().contains("snapshot")) {
 			return true;
 		}else {
 			return false;
 		}
-	}
-	/**
-	 * Call this to check items in inventory and remove it.
-	 */
-	public static void inventoryCheck(Inventory inv){
-				try{
-					for (int i =0; i < inv.getSize(); i++)
-						if (DisplayItem.checkShopItem(inv.getItem(i))) {
-							// Found Item and remove it.
-							inv.setItem(i, new ItemStack(Material.AIR, 0));
-							Util.debugLog("Something trying collect QuickShop displayItem, already cancelled. ("+inv.getLocation().toString()+")");
-						}
-				}catch (Throwable t){
-				}
-
 	}
 	private static Object serverInstance;
     private static Field tpsField;
@@ -785,7 +767,7 @@ public class Util {
 	    
 	}
     private static Class<?> getNMSClass(String className) {
-    	String name = Bukkit.getServer().getClass().getPackage().getName();
+    	String name = ((MinecraftServer)Sponge.getServer()).getClass().getPackage().getName();
 	    String version = name.substring(name.lastIndexOf('.') + 1);
         try {
             return Class.forName("net.minecraft.server." + version + "." + className);

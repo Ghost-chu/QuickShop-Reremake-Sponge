@@ -81,6 +81,13 @@
             <version>2.6</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.mojang</groupId>
+            <artifactId>MinecraftServer</artifactId>
+            <version>1.12.2</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/server.jar</systemPath>
+        </dependency>
 	</dependencies>
 
 </project>

@@ -178,7 +178,7 @@ public class Database {
 				
 			if (table.toLowerCase().startsWith("sqlite_autoindex_"))
 				continue;
-			plugin.getLogger().log(Level.WARNING, "Copying " + table + " to "+finalTable);
+			plugin.getLogger().info("Copying " + table + " to "+finalTable);
 			// Wipe the old records
 			db.getConnection().prepareStatement("DELETE FROM " + finalTable).execute();
 			// Fetch all the data from the existing database
@@ -204,7 +204,7 @@ public class Database {
 				ps.addBatch();
 				if (n % 100 == 0) {
 					ps.executeBatch();
-					plugin.getLogger().log(Level.WARNING, n + " records copied...");
+					plugin.getLogger().info( n + " records copied...");
 				}
 			}
 			ps.executeBatch();

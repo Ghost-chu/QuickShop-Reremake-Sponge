@@ -6,9 +6,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.UUID;
 
-import org.bukkit.inventory.ItemStack;
 import org.maxgamer.quickshop.QuickShop;
 import org.maxgamer.quickshop.Util.Util;
+import org.spongepowered.api.item.inventory.ItemStack;
 
 public class DatabaseHelper {
 	public static void setup(Database db) throws SQLException {

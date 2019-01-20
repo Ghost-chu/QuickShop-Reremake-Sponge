@@ -3,11 +3,12 @@ package org.maxgamer.quickshop.Shop;
 import java.util.List;
 import java.util.UUID;
 
-import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.bukkit.block.Sign;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
+import org.spongepowered.api.block.BlockState;
+import org.spongepowered.api.block.tileentity.Sign;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 public abstract interface Shop {
 	public abstract Shop clone();
@@ -18,7 +19,7 @@ public abstract interface Shop {
 
 	public abstract boolean matches(ItemStack paramItemStack);
 
-	public abstract Location getLocation();
+	public abstract Location<World> getLocation();
 
 	public abstract double getPrice();
 
@@ -60,7 +61,7 @@ public abstract interface Shop {
 
 	public abstract List<Sign> getSigns();
 
-	public abstract boolean isAttached(Block paramBlock);
+	public abstract boolean isAttached(BlockState paramBlock);
 
 	public abstract String getDataName();
 
