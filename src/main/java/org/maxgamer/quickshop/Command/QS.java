@@ -323,7 +323,7 @@ public class QS implements CommandCallable{
 			String lookFor = sb.toString();
 			lookFor = lookFor.toLowerCase();
 			Player p = (Player) sender;
-			Location loc = p.getEyeLocation().clone();
+			Location<World> loc = p.getEyeLocation().clone();
 			double minDistance = plugin.getConfig().getInt("shop.find-distance");
 			double minDistanceSquared = minDistance * minDistance;
 			int chunkRadius = (int) minDistance / 16 + 1;

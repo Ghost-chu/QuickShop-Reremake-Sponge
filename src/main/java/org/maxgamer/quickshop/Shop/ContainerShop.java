@@ -649,7 +649,7 @@ public class ContainerShop implements Shop {
 				return;
 			}
 			DisplayItem disItem = this.getDisplayItem();
-			Location dispLoc = disItem.getDisplayLocation();
+			Location<World> dispLoc = disItem.getDisplayLocation();
 			if (dispLoc.getBlock() != null && dispLoc.getBlock().getType() == BlockTypes.WATER) {
 				disItem.remove();
 				return;

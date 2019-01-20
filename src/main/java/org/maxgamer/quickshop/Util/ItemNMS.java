@@ -2,7 +2,6 @@ package org.maxgamer.quickshop.Util;
 
 import org.maxgamer.quickshop.QuickShop;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 

@@ -239,7 +239,7 @@ public class DisplayItem {
 				continue;
 			if (this.item != null && e.getEntityId() == this.item.getEntityId())
 				continue;
-			Location eLoc = e.getLocation().getBlock().getLocation();
+			Location<World> eLoc = e.getLocation();
 			if (eLoc.equals(displayLoc) || eLoc.equals(shop.getLocation())) {
 				ItemStack near = ((Item) e).getItemStack();
 				// if its the same its a dupe

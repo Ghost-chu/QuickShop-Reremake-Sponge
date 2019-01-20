@@ -8,7 +8,6 @@ import java.net.URL;
 import javax.net.ssl.HttpsURLConnection;
 
 import org.maxgamer.quickshop.QuickShop;
-import org.spongepowered.api.Sponge;
 import org.spongepowered.api.util.Color;
 
 
