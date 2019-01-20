@@ -1,0 +1,187 @@
+#Default config: https://github.com/KaiKikuchi/QuickShop/blob/master/src/main/resources/config.yml
+
+#Do not touch if you not clear know about this
+config-version: 16
+
+#Do not touch if you not know what is this
+dev-mode: false
+
+#Tax amount (decimal) - Eg, P1 buys $50 worth of stuff from P2.  Therefore, P1 loses $50, P2 gains $(1-0.05)*50, and tax-account gains $(0.05)*50.
+tax: 0.05
+
+#The fake player who money from taxing people goes to
+tax-account: tax
+
+#Whether or not to show taxes paid when selling to a shop
+show-tax: false
+
+#Should we log transactions/creations to Bukkit\Plugins\QuickShop\qs.log?
+log-actions: true
+
+#For item-item based economies that don't use virtual coins.
+whole-number-prices-only: false
+
+#Force bukkit chat handler (https://github.com/KaiKikuchi/QuickShop/issues/10)
+force-bukkit-chat-handler: false
+
+#Disallow QuickShop-Reremake send metrics data to bStats.
+disabled-metrics: false
+#Use "Anonymous" to replace your server name, BUT it will cause we cannot send important alert.
+#Usually, if have important alert need sent. We will pull down servers name from bStats and Google your server discord and send alert to server administrators.
+
+#Not working on Sponge Edition
+#anonymous-metrics: false
+
+#Should allow QS to check update on SpigotMC.org?
+updater: true
+
+database:
+    mysql: false
+    host: localhost
+    port: 3306
+    database: quickshop
+    user: root
+    password: passwd
+    # Set prefix to "none" to remove prefix
+    prefix: none
+    
+#Limits the number of shops a person can create and own at a single time.
+limits:
+    #Disable these if you're not using them! If this is false, the rest of this section is ignored
+    use: false
+    
+    #The default number of shops players can make
+    default: 10
+    
+    #Use old algorithm to calc unlimited shops into limits.
+    old-algorithm: false
+    
+    #Players with these permissions can create these amounts of shops.
+    ranks:
+        #Anyone with 'quickshop.vip' permissions, can create 20 shops instead of 10.
+        quickshop.vip: 20 #Players with quickshop.vip can make 20 shops.
+
+#A list of block (materials) which can be used to create shops.
+#By default, chests are added to this list.
+#This will only work for blocks which implement InventoryHolder
+#in other words, no enderchest shops, no shops on dirt blocks, etc.
+#May cause unexpected behaviour with some blocks... Eg don't make a 
+#shop on a hopper (It sucks the display item in) and furnace shops
+#allow players to put whatever item they want in all 3 slots and
+#dispenser shops aren't protected from redstone... Etc.
+shop-blocks:
+    - CHEST
+    - TRAPPED_CHEST
+    - ENDER_CHEST
+shop:
+    #Cost to make a stall
+    cost: 10
+    #Should we refund when their shops are deleted/removed/broken?
+    refund: false
+
+    #Is there a fee for changing prices on a shop (Help deter endless undercutting)
+    price-change-requires-fee: true
+    #If price changes require a fee, how much is the fee
+    fee-for-price-change: 50
+
+    #Should we try and lock their shops from other players, so people can't steal from them?
+    lock: true
+    
+    #Should we require players be sneaking to create and use shops?
+    sneak-to-create: false
+    sneak-to-trade: false
+    sneak-to-control: false
+    
+    #Should we automatically create the sign for the chest?
+    auto-sign: true
+    
+    #Should pay money from unlimited shops owner to player?
+    pay-unlimited-shop-owners: false
+    
+    #Should we place display items on the chests? This may cause duped items, especially for modded servers.
+    display-items: true
+    
+    #The plugin will check if the display item is in a valid position every the specified amount of ticks. 0 to disable.
+    display-items-check-ticks: 1200
+    
+    #When someone uses /qs find <item>, how far should we search in blocks?
+    #This command lets users shop quickly without wasting time searching
+    #Settings > 100 WILL cause lag. Don't do it, or don't cry when your server lags.
+    find-distance: 45
+    
+    #If vault not return coins symbol, QuickShop will use this symbol to replace it.
+    alternate-currency-symbol: '$'
+    
+    #Ignore trade messages if shop is unlimited
+    ignore-unlimited-shop-messages: false
+    
+    #Enable this if you only want player create the shop in special region
+    #When you enable this, you only can create shop in AreaShop's area
+    special-region-only: false
+    
+    #Allow auto fetch player shop, if you disable it ,Player need use /qs fetchmessage to fetch history shop messages. (Disable it may cause database size lost control.)
+    auto-fetch-shop-messages: true
+    
+
+#List of items to disallow selling of.  Anyone with quickshop.bypass.<itemID> can bypass it    
+blacklist:
+- Bedrock
+
+protect:
+  #Protect shop item can or cannot pull out by HopperMincart (Will remove HopprtMincart
+  minecart: true
+  #Protect shop block can or cannot pick up by entity (Will remove Entity
+  entity: true
+  #Protect shop block can or cannot active by Redstone
+  redstone: true
+  #Protect shop block can or cannot break by something growup
+  structuregrow: true
+  #Protect shop block can or cannot break by Entity and Block explode
+  explode: true
+  #Protect shop block can or cannot pull out by Hopper
+  hopper: true
+lockette:
+  private: "[Private]"
+  more_users: "[More Users]"
+  #Make Quickshop not cancel break lock sign event(Inpossible break locked chest)
+#Float items advanced filter manager
+#These all in testing and have many bugs, Use your own risk!
+float:
+  enable: false
+  #If this is disabled, all options after this will not working.
+  item:
+    #Item filter
+    enable: false
+    blacklist: true
+    #true = use blacklist mode, in blacklist item will disallow spawn float item
+    #false = use whitelist mode, in whitelist item will allow spawn float item
+    list:
+    - STONE
+    - GRASS_BLOCK
+    #add item's BUKKIT NAME in there
+  lore:
+    enable: false
+    blacklist: true
+    #true = use blacklist mode, in blacklist item will disallow spawn float item
+    #false = use whitelist mode, in whitelist item will allow spawn float item
+    list:
+      - NOT FLOAT LORE
+    #add keywords in there, plugin will check it contain or not on items.
+  displayname:
+    enable: false
+    blacklist: true
+    #true = use blacklist mode, in blacklist item will disallow spawn float item
+    #false = use whitelist mode, in whitelist item will allow spawn float item
+    list:
+    - Super Sword(Can't float)
+    #add keywords in there, plugin will check it contain or not on items.
+    
+# Enable or disable plugin support.
+plugin:
+    #If you have Multiverse-Core, QSRR will try load world when shop's world not exist and throw out exception auto repair the shop.
+    Multiverse-Core: true
+    #If you have OpenInv, QSRR will enable EnderChest feature.
+    OpenInv: true
+    #Enable AreaShop support
+    #Allow QuickShop detect AS unrented event and remove shop from region.
+    AreaShop: false

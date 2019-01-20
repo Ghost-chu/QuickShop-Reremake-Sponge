@@ -32,6 +32,7 @@ import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.scheduler.Task.Builder;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.util.Color;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.yaml.snakeyaml.Yaml;
@@ -48,6 +49,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.swing.LayoutFocusTraversalPolicy;
@@ -76,7 +78,6 @@ public class QuickShop {
 	private DisplayProtectionListener inventoryListener;
 	private ChunkListener chunkListener;
 	private WorldListener worldListener;
-	private Task.Builder itemWatcherTask;
 	private LogWatcher logWatcher;
 	/** Whether players are required to sneak to create/buy from a shop */
 	public boolean sneak;
@@ -106,10 +107,12 @@ public class QuickShop {
 	private boolean setupDBonEnableding = false;
 	private String dbPrefix="";
 	private Tab commandTabCompleter;
-	private Metrics metrics;
+	@Inject
+	private MetricsLite2 metrics;
 	private Configuration configuration;
 	private Task.Builder taskBuilder;
-	private Builder logWatchertask;
+	private Task logWatcherTask;
+	private Task itemWatcherTask;
 	/** 
 	 * Get the Player's Shop limit.
 	 * @return int Player's shop limit
@@ -140,8 +143,8 @@ public class QuickShop {
 		getLogger().info("Original author:Netherfoam, Timtower, KaiNoMood");
 		getLogger().info("Let's us start load plugin");
 		// NMS.init();
-		Sponge.getConfigManager().
-		saveDefaultConfig(); // Creates the config folder and copies config.yml
+		saveDefaultConfig();
+		 // Creates the config folder and copies config.yml
 								// (If one doesn't exist) as required.
 		reloadConfig(); // Reloads messages.yml too, aswell as config.yml and
 						// others.
@@ -156,7 +159,8 @@ public class QuickShop {
 				getLogger().error(
 						"WARNING: Set dev-mode: true in config.yml to allow qs load on dev mode(Maybe need add this line by your self).");
 				noopDisable = true;
-				Bukkit.getPluginManager().disablePlugin(this);
+				//Bukkit.getPluginManager().disablePlugin(this);
+				Sponge.getServer().shutdown(Text.of("You not enable dev-mode in config.yml, you must enable it to use Dev build."));
 				return;
 			}
 		}
@@ -196,12 +200,12 @@ public class QuickShop {
 			getLogger().info("Starting item scheduler");
 			ItemWatcher itemWatcher = new ItemWatcher(this);
 			//itemWatcherTask = Bukkit.getScheduler().runTaskTimer(this, itemWatcher, 600, 600);
-			itemWatcherTask=taskBuilder.execute(itemWatcher).delayTicks(600);
+			itemWatcherTask=taskBuilder.execute(itemWatcher).intervalTicks(600).submit(this);
 		}
 		if (this.getConfig().getBoolean("log-actions")) {
 			// Logger Handler
 			this.logWatcher = new LogWatcher(this, new File(this.configuration.getDataFolder(), "qs.log"));
-			logWatchertask = taskBuilder.execute(logWatcher).delayTicks(150);
+			logWatcherTask = taskBuilder.execute(logWatcher).intervalTicks(150).submit(this);
 		}
 		if (getConfig().getBoolean("shop.lock")) {
 			LockListener ll = new LockListener(this);
@@ -262,19 +266,19 @@ public class QuickShop {
 					try {
 						ownerUUID = UUID.fromString(owner);
 					} catch (IllegalArgumentException e) {
-						// This could be old data to be converted... check if it's a player
-						step = "Update owner to UUID";
-						// Because need update database, so use crossed method, Set ignore.
-						@SuppressWarnings("deprecation")
-						User player = Util.getOfflinePlayer(owner).get();
-						if (player.hasPlayedBefore()) {
-							ownerUUID = player.getUniqueId();
-							DatabaseHelper.updateOwner2UUID(ownerUUID.toString(), x, y, z, worldName);
-						} else {
-							// Invalid shop owner
+//						// This could be old data to be converted... check if it's a player
+//						step = "Update owner to UUID";
+//						// Because need update database, so use crossed method, Set ignore.
+//						@SuppressWarnings("deprecation")
+//						User player = Util.getOfflinePlayer(owner).get();
+//						if (player.hasPlayedBefore()) {
+//							ownerUUID = player.getUniqueId();
+//							DatabaseHelper.updateOwner2UUID(ownerUUID.toString(), x, y, z, worldName);
+//						} else {
+//							// Invalid shop owner
 							DatabaseHelper.removeShop(database, x, y, z, worldName);
 							continue;
-						}
+//						}
 					}
 					step = "Loading shop price";
 					double price = rs.getDouble("price");
@@ -299,7 +303,7 @@ public class QuickShop {
 					shop.setShopType(ShopType.fromID(type));
 					step = "Loading shop to memory";
 					shopManager.loadShop(rs.getString("world"), shop);
-					if (loc.getExtent() != null && loc.getChunk().isLoaded()) {
+					if (loc.getExtent() != null && loc.getExtent().getChunk(loc.getBlockX(),loc.getBlockY(),loc.getBlockZ()).get().isLoaded()) {
 						step = "Loading shop to memory >> Chunk loaded, Loaded to memory";
 						shop.onLoad();
 						shop.setSignText();
@@ -359,7 +363,7 @@ public class QuickShop {
 							getLogger().error("Failed to backup! (File not found)");
 						}
 						String uuid = UUID.randomUUID().toString().replaceAll("_", "");
-						File bksqlfile = new File(Bukkit.getPluginManager().getPlugin("QuickShop").getDataFolder()
+						File bksqlfile = new File(configuration.getDataFolder()
 								.getAbsolutePath().toString() + "/shop_backup_" + uuid + ".db");
 						try {
 							bksqlfile.createNewFile();
@@ -404,7 +408,8 @@ public class QuickShop {
 		
 		if (getConfig().getBoolean("shop.lock")) {
 			LockListener lockListener = new LockListener(this);
-			Bukkit.getServer().getPluginManager().registerEvents(lockListener, this);
+			//Bukkit.getServer().getPluginManager().registerEvents(lockListener, this);
+			Sponge.getEventManager().registerListeners(this, lockListener);
 		}
 		// Command handlers
 		commandExecutor = new QS(this);
@@ -433,7 +438,7 @@ public class QuickShop {
 		
 		
 		if (display && displayItemCheckTicks > 0) {
-			new BukkitRunnable() {
+		 taskBuilder.execute(new Runnable() {
 				@Override
 				public void run() {
 					Iterator<Shop> it = getShopManager().getShopIterator();
@@ -446,8 +451,8 @@ public class QuickShop {
 										+ " is not on the correct location and has been removed. Probably someone is trying to cheat.");
 								for (Player player : getServer().getOnlinePlayers()) {
 									if (player.hasPermission("quickshop.alerts")) {
-										player.sendMessage(ChatColor.RED + "[QuickShop] Display item for " + shop
-												+ " is not on the correct location and has been removed. Probably someone is trying to cheat.");
+										player.sendMessage(Text.of(Color.RED + "[QuickShop] Display item for " + shop
+												+ " is not on the correct location and has been removed. Probably someone is trying to cheat."));
 									}
 								}
 								cShop.getDisplayItem().remove();
@@ -455,90 +460,86 @@ public class QuickShop {
 						}
 					}
 				}
-			}.runTaskTimer(this, 1L, displayItemCheckTicks);
+			}).intervalTicks(displayItemCheckTicks);
 		}
 		MsgUtil.loadTransactionMessages();
 		MsgUtil.clean();
 		getLogger().info("QuickShop loaded!");
 
 		if (getConfig().getBoolean("disabled-metrics") != true) {
-			String serverVer = Bukkit.getVersion();
-			String bukkitVer = Bukkit.getBukkitVersion();
-			String serverName = Bukkit.getServer().getName();
-			metrics = new Metrics(this);
 			// Use internal Metric class not Maven for solve plugin name issues
-			String display_Items;
-			if (getConfig().getBoolean("shop.display-items")) { // Maybe mod server use this plugin more? Or have big
-																// number items need disabled?
-				display_Items = "Enabled";
-			} else {
-				display_Items = "Disabled";
-			}
-			String locks;
-			if (getConfig().getBoolean("shop.lock")) {
-				locks = "Enabled";
-			} else {
-				locks = "Disabled";
-			}
-			String sneak_action;
-			if (getConfig().getBoolean("shop.sneak-to-create") || getConfig().getBoolean("shop.sneak-to-trade")) {
-				sneak_action = "Enabled";
-			} else {
-				sneak_action = "Disabled";
-			}
-			String use_protect_minecart;
-			if (getConfig().getBoolean("protect.minecart")) {
-				use_protect_minecart = "Enabled";
-			} else {
-				use_protect_minecart = "Disabled";
-			}
-			String use_protect_entity;
-			if (getConfig().getBoolean("protect.entity")) {
-				use_protect_entity = "Enabled";
-			} else {
-				use_protect_entity = "Disabled";
-			}
-			String use_protect_redstone;
-			if (getConfig().getBoolean("protect.redstone")) {
-				use_protect_redstone = "Enabled";
-			} else {
-				use_protect_redstone = "Disabled";
-			}
-			String use_protect_structuregrow;
-			if (getConfig().getBoolean("protect.structuregrow")) {
-				use_protect_structuregrow = "Enabled";
-			} else {
-				use_protect_structuregrow = "Disabled";
-			}
-			String use_protect_explode;
-			if (getConfig().getBoolean("protect.explode")) {
-				use_protect_explode = "Enabled";
-			} else {
-				use_protect_explode = "Disabled";
-			}
-			String use_protect_hopper;
-			if (getConfig().getBoolean("protect.hopper")) {
-				use_protect_hopper = "Enabled";
-			} else {
-				use_protect_hopper = "Disabled";
-			}
-			String shop_find_distance = getConfig().getString("shop.find-distance");
-			// Version
-			metrics.addCustomChart(new Metrics.SimplePie("server_version", () -> serverVer));
-			metrics.addCustomChart(new Metrics.SimplePie("bukkit_version", () -> bukkitVer));
-			metrics.addCustomChart(new Metrics.SimplePie("server_name", () -> serverName));
-			metrics.addCustomChart(new Metrics.SimplePie("use_display_items", () -> display_Items));
-			metrics.addCustomChart(new Metrics.SimplePie("use_locks", () -> locks));
-			metrics.addCustomChart(new Metrics.SimplePie("use_sneak_action", () -> sneak_action));
-			metrics.addCustomChart(new Metrics.SimplePie("use_protect_minecart", () -> use_protect_minecart));
-			metrics.addCustomChart(new Metrics.SimplePie("use_protect_entity", () -> use_protect_entity));
-			metrics.addCustomChart(new Metrics.SimplePie("use_protect_redstone", () -> use_protect_redstone));
-			metrics.addCustomChart(new Metrics.SimplePie("use_protect_structuregrow", () -> use_protect_structuregrow));
-			metrics.addCustomChart(new Metrics.SimplePie("use_protect_explode", () -> use_protect_explode));
-			metrics.addCustomChart(new Metrics.SimplePie("use_protect_hopper", () -> use_protect_hopper));
-			metrics.addCustomChart(new Metrics.SimplePie("shop_find_distance", () -> shop_find_distance));
+//			String display_Items;
+//			if (getConfig().getBoolean("shop.display-items")) { // Maybe mod server use this plugin more? Or have big
+//																// number items need disabled?
+//				display_Items = "Enabled";
+//			} else {
+//				display_Items = "Disabled";
+//			}
+//			String locks;
+//			if (getConfig().getBoolean("shop.lock")) {
+//				locks = "Enabled";
+//			} else {
+//				locks = "Disabled";
+//			}
+//			String sneak_action;
+//			if (getConfig().getBoolean("shop.sneak-to-create") || getConfig().getBoolean("shop.sneak-to-trade")) {
+//				sneak_action = "Enabled";
+//			} else {
+//				sneak_action = "Disabled";
+//			}
+//			String use_protect_minecart;
+//			if (getConfig().getBoolean("protect.minecart")) {
+//				use_protect_minecart = "Enabled";
+//			} else {
+//				use_protect_minecart = "Disabled";
+//			}
+//			String use_protect_entity;
+//			if (getConfig().getBoolean("protect.entity")) {
+//				use_protect_entity = "Enabled";
+//			} else {
+//				use_protect_entity = "Disabled";
+//			}
+//			String use_protect_redstone;
+//			if (getConfig().getBoolean("protect.redstone")) {
+//				use_protect_redstone = "Enabled";
+//			} else {
+//				use_protect_redstone = "Disabled";
+//			}
+//			String use_protect_structuregrow;
+//			if (getConfig().getBoolean("protect.structuregrow")) {
+//				use_protect_structuregrow = "Enabled";
+//			} else {
+//				use_protect_structuregrow = "Disabled";
+//			}
+//			String use_protect_explode;
+//			if (getConfig().getBoolean("protect.explode")) {
+//				use_protect_explode = "Enabled";
+//			} else {
+//				use_protect_explode = "Disabled";
+//			}
+//			String use_protect_hopper;
+//			if (getConfig().getBoolean("protect.hopper")) {
+//				use_protect_hopper = "Enabled";
+//			} else {
+//				use_protect_hopper = "Disabled";
+//			}
+//			String shop_find_distance = getConfig().getString("shop.find-distance");
+//			// Version
+//			metrics.addCustomChart(new Metrics.SimplePie("server_version", () -> serverVer));
+//			metrics.addCustomChart(new Metrics.SimplePie("bukkit_version", () -> bukkitVer));
+//			metrics.addCustomChart(new Metrics.SimplePie("server_name", () -> serverName));
+//			metrics.addCustomChart(new Metrics.SimplePie("use_display_items", () -> display_Items));
+//			metrics.addCustomChart(new Metrics.SimplePie("use_locks", () -> locks));
+//			metrics.addCustomChart(new Metrics.SimplePie("use_sneak_action", () -> sneak_action));
+//			metrics.addCustomChart(new Metrics.SimplePie("use_protect_minecart", () -> use_protect_minecart));
+//			metrics.addCustomChart(new Metrics.SimplePie("use_protect_entity", () -> use_protect_entity));
+//			metrics.addCustomChart(new Metrics.SimplePie("use_protect_redstone", () -> use_protect_redstone));
+//			metrics.addCustomChart(new Metrics.SimplePie("use_protect_structuregrow", () -> use_protect_structuregrow));
+//			metrics.addCustomChart(new Metrics.SimplePie("use_protect_explode", () -> use_protect_explode));
+//			metrics.addCustomChart(new Metrics.SimplePie("use_protect_hopper", () -> use_protect_hopper));
+//			metrics.addCustomChart(new Metrics.SimplePie("shop_find_distance", () -> shop_find_distance));
 			// Exp for stats, maybe i need improve this, so i add this.
-			metrics.submitData(); // Submit now!
+			//metrics.submitData(); // Submit now!
 			getLogger().info("Mertics submited.");
 		} else {
 			getLogger().info("You have disabled mertics, Skipping...");
@@ -782,7 +783,7 @@ public class QuickShop {
 			itemWatcherTask.cancel();
 		}
 		if (logWatcher != null) {
-			logWatcher.task.cancel();
+			logWatcherTask.cancel();
 			logWatcher.close(); // Closes the file
 		}
 		/* Unload UpdateWatcher */
