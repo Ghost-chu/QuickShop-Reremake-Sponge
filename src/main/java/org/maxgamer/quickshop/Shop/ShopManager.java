@@ -48,7 +48,6 @@ public class ShopManager {
 	QuickShop plugin = QuickShop.instance;
 	private HashMap<UUID, Info> actions = new HashMap<UUID, Info>();
 	private HashMap<String, HashMap<ShopChunk, HashMap<Location<World>, Shop>>> shops = new HashMap<String, HashMap<ShopChunk, HashMap<Location<World>, Shop>>>();
-	final private static ItemStack AIR = ItemStack.builder().itemType(ItemTypes.AIR).build();
 	
 
 	public ShopManager(QuickShop plugin) {
