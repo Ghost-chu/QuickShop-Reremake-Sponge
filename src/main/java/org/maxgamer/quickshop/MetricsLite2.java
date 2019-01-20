@@ -37,7 +37,6 @@ import java.util.zip.GZIPOutputStream;
  * <p>
  * DO NOT modify any of this class. Access it from your own plugin ONLY.
  */
-@SuppressWarnings({"WeakerAccess", "unused"})
 public class MetricsLite2 implements Metrics {
     /**
      * Internal class for storing information about old bStats instances.
@@ -236,7 +235,8 @@ public class MetricsLite2 implements Metrics {
         return data;
     }
 
-    private void startSubmitting() {
+    @SuppressWarnings("unchecked")
+	private void startSubmitting() {
         // bStats 1 cleanup. Runs once.
         try {
             Path configPath = configDir.resolve("bStats");

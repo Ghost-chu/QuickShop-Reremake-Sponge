@@ -5,7 +5,6 @@ import org.spongepowered.api.plugin.PluginContainer;
 
 import java.util.List;
 
-@SuppressWarnings({"WeakerAccess", "unused"})
 public interface Metrics {
     /**
      * Cancels this instance's scheduled data sending.

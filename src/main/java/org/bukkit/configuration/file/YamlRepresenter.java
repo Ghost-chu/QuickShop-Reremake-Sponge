@@ -1,8 +1,5 @@
 package org.bukkit.configuration.file;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import org.bukkit.configuration.ConfigurationSection;
 import org.yaml.snakeyaml.nodes.Node;
 import org.yaml.snakeyaml.representer.Representer;
