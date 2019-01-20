@@ -8,11 +8,14 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 
 import org.maxgamer.quickshop.QuickShop;
+import org.spongepowered.api.scheduler.Task;
 
 public class LogWatcher implements Runnable {
 	private PrintStream ps;
 	private ArrayList<String> logs = new ArrayList<String>(5);
-	public LogWatcher(QuickShop plugin, File log, int timewait) {
+	Task.Builder taskBuilder = Task.builder();
+
+	public LogWatcher(QuickShop plugin, File log) {
 		try {
 			if (!log.exists()) {
 				log.createNewFile();
@@ -26,22 +29,6 @@ public class LogWatcher implements Runnable {
 			e.printStackTrace();
 			plugin.getLogger().error("Could not create log file!");
 		}
-		ItemWatcher.timewait = (timewait/20)*1000;
-		new Runnable() {
-			
-			@Override
-			public void run() {
-				while (true) {
-					try {
-						Thread.sleep(timewait);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					this.run();
-				}
-			}
-		};
 	}
 
 	@Override

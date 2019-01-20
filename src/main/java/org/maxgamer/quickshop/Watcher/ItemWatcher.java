@@ -18,25 +18,9 @@ import org.spongepowered.api.world.World;
  */
 public class ItemWatcher implements Runnable {
 	static QuickShop plugin = QuickShop.instance;
-	static int timewait = 0;
-	public ItemWatcher(QuickShop plugin, int timewait) {
+
+	public ItemWatcher(QuickShop plugin) {
 		ItemWatcher.plugin = plugin;
-		ItemWatcher.timewait = (timewait/20)*1000;
-		new Runnable() {
-			
-			@Override
-			public void run() {
-				while (true) {
-					try {
-						Thread.sleep(timewait);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					this.run();
-				}
-			}
-		};
 	}
 
 	public void run() {

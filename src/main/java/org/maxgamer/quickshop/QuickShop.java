@@ -24,10 +24,13 @@ import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GameAboutToStartServerEvent;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.plugin.Plugin;
+import org.spongepowered.api.scheduler.Task;
+import org.spongepowered.api.scheduler.Task.Builder;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -73,7 +76,7 @@ public class QuickShop {
 	private DisplayProtectionListener inventoryListener;
 	private ChunkListener chunkListener;
 	private WorldListener worldListener;
-	private BukkitTask itemWatcherTask;
+	private Task.Builder itemWatcherTask;
 	private LogWatcher logWatcher;
 	/** Whether players are required to sneak to create/buy from a shop */
 	public boolean sneak;
@@ -105,6 +108,8 @@ public class QuickShop {
 	private Tab commandTabCompleter;
 	private Metrics metrics;
 	private Configuration configuration;
+	private Task.Builder taskBuilder;
+	private Builder logWatchertask;
 	/** 
 	 * Get the Player's Shop limit.
 	 * @return int Player's shop limit
@@ -190,12 +195,13 @@ public class QuickShop {
 			// Display item handler thread
 			getLogger().info("Starting item scheduler");
 			ItemWatcher itemWatcher = new ItemWatcher(this);
-			itemWatcherTask = Bukkit.getScheduler().runTaskTimer(this, itemWatcher, 600, 600);
+			//itemWatcherTask = Bukkit.getScheduler().runTaskTimer(this, itemWatcher, 600, 600);
+			itemWatcherTask=taskBuilder.execute(itemWatcher).delayTicks(600);
 		}
 		if (this.getConfig().getBoolean("log-actions")) {
 			// Logger Handler
-			this.logWatcher = new LogWatcher(this, new File(this.getDataFolder(), "qs.log"));
-			logWatcher.task = Bukkit.getScheduler().runTaskTimerAsynchronously(this, this.logWatcher, 150, 150);
+			this.logWatcher = new LogWatcher(this, new File(this.configuration.getDataFolder(), "qs.log"));
+			logWatchertask = taskBuilder.execute(logWatcher).delayTicks(150);
 		}
 		if (getConfig().getBoolean("shop.lock")) {
 			LockListener ll = new LockListener(this);
@@ -260,7 +266,7 @@ public class QuickShop {
 						step = "Update owner to UUID";
 						// Because need update database, so use crossed method, Set ignore.
 						@SuppressWarnings("deprecation")
-						OfflinePlayer player = Bukkit.getOfflinePlayer(owner);
+						User player = Util.getOfflinePlayer(owner).get();
 						if (player.hasPlayedBefore()) {
 							ownerUUID = player.getUniqueId();
 							DatabaseHelper.updateOwner2UUID(ownerUUID.toString(), x, y, z, worldName);
@@ -273,7 +279,7 @@ public class QuickShop {
 					step = "Loading shop price";
 					double price = rs.getDouble("price");
 					step = "Createing Location object";
-					Location loc = new Location(world, x, y, z);
+					Location<World> loc = new Location<World>(world, x, y, z);
 					/* Skip invalid shops, if we know of any */
 					step = "Checking InventoryHolder";
 					if (world != null && Util.canBeShop(loc.getBlock(),null,true) == false) {
@@ -293,7 +299,7 @@ public class QuickShop {
 					shop.setShopType(ShopType.fromID(type));
 					step = "Loading shop to memory";
 					shopManager.loadShop(rs.getString("world"), shop);
-					if (loc.getWorld() != null && loc.getChunk().isLoaded()) {
+					if (loc.getExtent() != null && loc.getChunk().isLoaded()) {
 						step = "Loading shop to memory >> Chunk loaded, Loaded to memory";
 						shop.onLoad();
 						shop.setSignText();

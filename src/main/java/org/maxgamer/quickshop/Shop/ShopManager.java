@@ -194,7 +194,7 @@ public class ShopManager {
 	 * @return The shop at that location
 	 */
 	public Shop getShop(Location<World> loc) {
-		HashMap<Location<World>, Shop> inChunk = getShops(loc.getChunk());
+		HashMap<Location<World>, Shop> inChunk = getShops(loc.getExtent().getChunk(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()).get());
 		if (inChunk == null) {
 			return null;
 		}
@@ -251,7 +251,7 @@ public class ShopManager {
 		ShopUnloadEvent shopUnloadEvent = new ShopUnloadEvent(shop);
 		Bukkit.getPluginManager().callEvent(shopUnloadEvent);
 		Location<World> loc = shop.getLocation();
-		String world = loc.getWorld().getName();
+		String world = loc.getExtent().getName();
 		HashMap<ShopChunk, HashMap<Location<World>, Shop>> inWorld = this.getShops().get(world);
 		int x = (int) Math.floor((shop.getLocation().getBlockX()) / 16.0);
 		int z = (int) Math.floor((shop.getLocation().getBlockZ()) / 16.0);
@@ -367,7 +367,8 @@ public class ShopManager {
 					p.sendMessage(Text.of(MsgUtil.getMessage("shop-creation-cancelled")));
 					return;
 				}
-				if (info.getLocation().distanceSquared(p.getLocation()) > 25) {
+				
+				if (info.getLocation().getBlockPosition().distanceSquared(p.getLocation().getBlockPosition()) > 25) {
 					p.sendMessage(Text.of(MsgUtil.getMessage("shop-creation-cancelled")));
 					return;
 				}
@@ -580,7 +581,7 @@ public class ShopManager {
 				p.sendMessage(Text.of(MsgUtil.getMessage("shop-already-owned")));
 				return;
 			}
-			if (Util.getSecondHalf(info.getLocation().getBlock()) != null
+			if (Util.getSecondHalf(info.getLocation()) != null
 					&& !p.hasPermission("quickshop.create.double")) {
 				p.sendMessage(Text.of(MsgUtil.getMessage("no-double-chests")));
 				return;
