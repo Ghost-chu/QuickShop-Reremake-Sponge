@@ -23,6 +23,7 @@ import org.maxgamer.quickshop.Shop.ShopManager;
 import org.maxgamer.quickshop.Shop.ShopType;
 import org.maxgamer.quickshop.Util.MsgUtil;
 import org.maxgamer.quickshop.Util.Util;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandCallable;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
@@ -31,10 +32,12 @@ import org.spongepowered.api.command.args.CommandContext;
 import org.spongepowered.api.command.spec.CommandExecutor;
 import org.spongepowered.api.entity.living.Living;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.Color;
+import org.spongepowered.api.world.Chunk;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 
@@ -57,21 +60,21 @@ public class QS implements CommandCallable{
 					shop.setSignText();
 					shop.update();
 					sender.sendMessage(Text.of(MsgUtil.getMessage("command.toggle-unlimited",
-							(shop.isUnlimited() ? "unlimited" : "limited")));
+							(shop.isUnlimited() ? "unlimited" : "limited"))));
 					return;
 				}
 			}
-			sender.sendMessage(Text.of(MsgUtil.getMessage("not-looking-at-shop"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("not-looking-at-shop")));
 			return;
 		} else {
-			sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission")));
 			return;
 		}
 	}
 	private void silentUnlimited(CommandSource sender, String[]args) {
 		if (sender.hasPermission("quickshop.unlimited")) {
 			
-				Shop shop = plugin.getShopManager().getShop(new Location(Bukkit.getWorld(args[1]), Integer.valueOf(args[2]),
+				Shop shop = plugin.getShopManager().getShop(new Location(Sponge.getServer().getWorld(args[1]).get(), Integer.valueOf(args[2]),
 						Integer.valueOf(args[3]), Integer.valueOf(args[4])));
 				if (shop != null) {
 					shop.setUnlimited(!shop.isUnlimited());
@@ -107,27 +110,27 @@ public class QS implements CommandCallable{
 				return;
 			}
 		}
-		p.sendMessage(Color.RED + "No shop found!");
+		p.sendMessage(Text.of(Color.RED + "No shop found!"));
 	}
 	private void fetchMessage(CommandSource sender, String[] args) {
 		if (sender instanceof Player == false) {
-			sender.sendMessage(Text.of(Color.RED + "Only players may use that command.");
+			sender.sendMessage(Text.of(Color.RED + "Only players may use that command."));
 			return;
 		}
 		Player p = (Player) sender;
-			Bukkit.getScheduler().runTask(QuickShop.instance, new Runnable() {
+			Sponge.getScheduler().createTaskBuilder().execute(new Runnable() {
 				@Override
 				public void run() {
 					MsgUtil.flush(p);
 				}
-			});
+			}).async().delayTicks(60).submit(plugin);
 	}
 	private void silentRemove(CommandSource sender, String[] args) {
 		// silentRemove world x y z
 		if (args.length < 4)
 			return;
 		Player p = (Player) sender;
-		Shop shop = plugin.getShopManager().getShop(new Location(Bukkit.getWorld(args[1]), Integer.valueOf(args[2]),
+		Shop shop = plugin.getShopManager().getShop(new Location(Sponge.getServer().getWorld(args[1]).get(), Integer.valueOf(args[2]),
 				Integer.valueOf(args[3]), Integer.valueOf(args[4])));
 		if (shop == null)
 			return;
@@ -136,14 +139,14 @@ public class QS implements CommandCallable{
 			if (shop.getOwner().equals(p.getUniqueId())||sender.hasPermission("quickshop.other.destroy")) {
 				shop.delete();
 				try {
-					DatabaseHelper.removeShop(plugin.getDB(), Integer.valueOf(args[2]), Integer.valueOf(args[3]), Integer.valueOf(args[4]), Bukkit.getWorld(args[1]).getName());
+					DatabaseHelper.removeShop(plugin.getDB(), Integer.valueOf(args[2]), Integer.valueOf(args[3]), Integer.valueOf(args[4]), Sponge.getServer().getWorld(args[1]).get().getName());
 				} catch (NumberFormatException e) {
 					e.printStackTrace();
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
 			} else {
-				sender.sendMessage(Text.of(Color.RED + MsgUtil.getMessage("no-permission"));
+				sender.sendMessage(Text.of(Color.RED + MsgUtil.getMessage("no-permission")));
 			}
 			return;
 		}
@@ -151,13 +154,13 @@ public class QS implements CommandCallable{
 	@SuppressWarnings("unused")
 	private void export(CommandSource sender, String[] args) {
 		if (args.length < 2) {
-			sender.sendMessage(Text.of(Color.RED + "Usage: /qs export mysql|sqlite");
+			sender.sendMessage(Text.of(Color.RED + "Usage: /qs export mysql|sqlite"));
 			return;
 		}
 		String type = args[1].toLowerCase();
 		if (type.startsWith("mysql")) {
 			if (plugin.getDB().getCore() instanceof MySQLCore) {
-				sender.sendMessage(Text.of(Color.RED + "Database is already MySQL");
+				sender.sendMessage(Text.of(Color.RED + "Database is already MySQL"));
 				return;
 			}
 			ConfigurationSection cfg = plugin.getConfig().getConfigurationSection("database");
@@ -171,35 +174,35 @@ public class QS implements CommandCallable{
 			try {
 				target = new Database(core);
 				QuickShop.instance.getDB().copyTo(target);
-				sender.sendMessage(Text.of(Color.GREEN + "Success - Exported to MySQL " + user + "@" + host + "." + name);
+				sender.sendMessage(Text.of(Color.GREEN + "Success - Exported to MySQL " + user + "@" + host + "." + name));
 			} catch (Exception e) {
 				e.printStackTrace();
 				sender.sendMessage(Text.of(Color.RED + "Failed to export to MySQL " + user + "@" + host + "." + name
-						+ Color.DARK_RED + " Reason: " + e.getMessage());
+						+ Color.RED + " Reason: " + e.getMessage()));
 			}
 			return;
 		}
 		if (type.startsWith("sql") || type.contains("file")) {
 			if (plugin.getDB().getCore() instanceof SQLiteCore) {
-				sender.sendMessage(Text.of(Color.RED + "Database is already SQLite");
+				sender.sendMessage(Text.of(Color.RED + "Database is already SQLite"));
 				return;
 			}
-			File file = new File(plugin.getDataFolder(), "shops.db");
+			File file = new File(plugin.getConfiguration().getDataFolder(), "shops.db");
 			if (file.exists()) {
 				if (file.delete() == false) {
 					sender.sendMessage(Text.of(
-							Color.RED + "Warning: Failed to delete old shops.db file. This may cause errors.");
+							Color.RED + "Warning: Failed to delete old shops.db file. This may cause errors."));
 				}
 			}
 			SQLiteCore core = new SQLiteCore(file);
 			try {
 				Database target = new Database(core);
 				QuickShop.instance.getDB().copyTo(target);
-				sender.sendMessage(Text.of(Color.GREEN + "Success - Exported to SQLite: " + file.toString());
+				sender.sendMessage(Text.of(Color.GREEN + "Success - Exported to SQLite: " + file.toString()));
 			} catch (Exception e) {
 				e.printStackTrace();
 				sender.sendMessage(Text.of(Color.RED + "Failed to export to SQLite: " + file.toString() + " Reason: "
-						+ e.getMessage());
+						+ e.getMessage()));
 			}
 			return;
 		}
@@ -245,7 +248,7 @@ public class QS implements CommandCallable{
 				sender.sendMessage(Text.of(MsgUtil.getMessage("thats-not-a-number"));
 				return;
 			}
-			BlockIterator bIt = new BlockIterator((LivingEntity) (Player) sender, 10);
+			BlockIterator bIt = new BlockIterator((Living) (Player) sender, 10);
 			while (bIt.hasNext()) {
 				Block b = bIt.next();
 				Shop shop = plugin.getShopManager().getShop(b.getLocation());
@@ -265,7 +268,7 @@ public class QS implements CommandCallable{
 	private void silentEmpty(CommandSource sender, String[] args) {
 		if (sender.hasPermission("quickshop.refill")) {
 
-			Shop shop = plugin.getShopManager().getShop(new Location(Bukkit.getWorld(args[1]), Integer.valueOf(args[2]),
+			Shop shop = plugin.getShopManager().getShop(new Location<World>(Sponge.getServer().getWorld(args[1]).get(), Integer.valueOf(args[2]),
 					Integer.valueOf(args[3]), Integer.valueOf(args[4])));
 			if (shop != null) {
 				if (shop instanceof ContainerShop) {
@@ -284,7 +287,7 @@ public class QS implements CommandCallable{
 	}
 	private void empty(CommandSource sender, String[] args) {
 		if (sender instanceof Player && sender.hasPermission("quickshop.refill")) {
-			BlockIterator bIt = new BlockIterator((LivingEntity) (Player) sender, 10);
+			BlockIterator bIt = new BlockIterator((Living) (Player) sender, 10);
 			while (bIt.hasNext()) {
 				Block b = bIt.next();
 				Shop shop = plugin.getShopManager().getShop(b.getLocation());
@@ -292,25 +295,25 @@ public class QS implements CommandCallable{
 					if (shop instanceof ContainerShop) {
 						ContainerShop cs = (ContainerShop) shop;
 						cs.getInventory().clear();
-						sender.sendMessage(Text.of(MsgUtil.getMessage("empty-success"));
+						sender.sendMessage(Text.of(MsgUtil.getMessage("empty-success")));
 						return;
 					} else {
-						sender.sendMessage(Text.of(MsgUtil.getMessage("not-looking-at-shop"));
+						sender.sendMessage(Text.of(MsgUtil.getMessage("not-looking-at-shop")));
 						return;
 					}
 				}
 			}
-			sender.sendMessage(Text.of(MsgUtil.getMessage("not-looking-at-shop"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("not-looking-at-shop")));
 			return;
 		} else {
-			sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission"));
+			sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission")));
 			return;
 		}
 	}
 	private void find(CommandSource sender, String[] args) {
 		if (sender instanceof Player && sender.hasPermission("quickshop.find")) {
 			if (args.length < 2) {
-				sender.sendMessage(Text.of(MsgUtil.getMessage("command.no-type-given"));
+				sender.sendMessage(Text.of(MsgUtil.getMessage("command.no-type-given")));
 				return;
 			}
 			StringBuilder sb = new StringBuilder(args[1]);
@@ -329,14 +332,14 @@ public class QS implements CommandCallable{
 			for (int x = -chunkRadius + c.getX(); x < chunkRadius + c.getX(); x++) {
 				for (int z = -chunkRadius + c.getZ(); z < chunkRadius + c.getZ(); z++) {
 					Chunk d = c.getWorld().getChunkAt(x, z);
-					HashMap<Location, Shop> inChunk = plugin.getShopManager().getShops(d);
+					HashMap<Location<World>, Shop> inChunk = plugin.getShopManager().getShops(d);
 					if (inChunk == null)
 						continue;
 					for (Shop shop : inChunk.values()) {
 						if (MsgUtil.getItemi18n(shop.getDataName()).toLowerCase().contains(lookFor)
-								&& shop.getLocation().distanceSquared(loc) < minDistanceSquared) {
+								&& shop.getLocation().getBlockPosition().distanceSquared(loc.getBlockPosition()) < minDistanceSquared) {
 							closest = shop;
-							minDistanceSquared = shop.getLocation().distanceSquared(loc);
+							minDistanceSquared = shop.getLocation().getBiomePosition().distanceSquared(loc.getBlockPosition());
 						}
 					}
 				}
@@ -345,7 +348,7 @@ public class QS implements CommandCallable{
 				sender.sendMessage(Text.of(MsgUtil.getMessage("no-nearby-shop", args[1]));
 				return;
 			}
-			Location lookat = closest.getLocation().clone().add(0.5, 0.5, 0.5);
+			Location<World> lookat = closest.getLocation().copy().add(0.5, 0.5, 0.5);
 			// Hack fix to make /qs find not used by /back
 			p.teleport(this.lookAt(loc, lookat).add(0, -1.62, 0), TeleportCause.UNKNOWN);
 			p.sendMessage(Text.of(
@@ -384,12 +387,12 @@ public class QS implements CommandCallable{
 							}
 
 							if (Util.getSecondHalf(b) != null && !p.hasPermission("quickshop.create.double")) {
-								p.sendMessage(MsgUtil.getMessage("no-double-chests"));
+								p.sendMessage(Text.of(MsgUtil.getMessage("no-double-chests")));
 								return;
 							}
 							if (Util.isBlacklisted(item.getType())
-									&& !p.hasPermission("quickshop.bypass." + item.getType().name())) {
-								p.sendMessage(MsgUtil.getMessage("blacklisted-item"));
+									&& !p.hasPermission("quickshop.bypass." + item.getType().getName())) {
+								p.sendMessage(Text.of(MsgUtil.getMessage("blacklisted-item")));
 								return;
 							}
 
@@ -400,7 +403,7 @@ public class QS implements CommandCallable{
 										b.getRelative(p.getFacing().getOppositeFace()));
 								plugin.getShopManager().getActions().put(p.getUniqueId(), info);
 								p.sendMessage(
-										MsgUtil.getMessage("how-much-to-trade-for", Util.getName(info.getItem())));
+										Text.of(MsgUtil.getMessage("how-much-to-trade-for", Util.getName(info.getItem()))));
 							} else {
 								plugin.getShopManager().handleChat(p, args[1]);
 							}
@@ -438,7 +441,7 @@ public class QS implements CommandCallable{
 	}
 	private void silentBuy(CommandSource sender, String[] args) {
 		if (sender.hasPermission("quickshop.create.buy")) {
-			Shop shop = plugin.getShopManager().getShop(new Location(Bukkit.getWorld(args[1]), Integer.valueOf(args[2]),
+			Shop shop = plugin.getShopManager().getShop(new Location(Sponge.getServer().getWorld(args[1]).get(), Integer.valueOf(args[2]),
 					Integer.valueOf(args[3]), Integer.valueOf(args[4])));
 			if (shop != null && shop.getOwner().equals(((Player) sender).getUniqueId())) {
 				shop.setShopType(ShopType.BUYING);
@@ -474,7 +477,7 @@ public class QS implements CommandCallable{
 	}
 	private void silentSell(CommandSource sender, String[] args) {
 		if (sender.hasPermission("quickshop.create.sell")) {
-				Shop shop = plugin.getShopManager().getShop(new Location(Bukkit.getWorld(args[1]),
+				Shop shop = plugin.getShopManager().getShop(new Location(Sponge.getServer().getWorld(args[1]).get(),
 						Integer.valueOf(args[2]), Integer.valueOf(args[3]), Integer.valueOf(args[4])));
 				if (shop != null && shop.getOwner().equals(((Player) sender).getUniqueId())) {
 					shop.setShopType(ShopType.SELLING);
@@ -557,14 +560,10 @@ public class QS implements CommandCallable{
 						sender.sendMessage(Text.of(
 								MsgUtil.getMessage("fee-charged-for-price-change", plugin.getEcon().format(fee))));
 						try {
-							for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
-								if (player.getName().equals(plugin.getConfig().getString("tax-account"))) {
-									plugin.getEcon().deposit(player.getUniqueId(), fee);
-								}
-							}
+									plugin.getEcon().deposit(Util.getOfflinePlayer(plugin.getConfig().getString("tax-account")).get().getUniqueId(), fee);
 						} catch (Exception e) {
 							e.getMessage();
-							plugin.getLogger().log(Level.WARNING,
+							plugin.getLogger().warn(
 									"QuickShop can't pay tax to account in config.yml,Please set tax account name to a exist player!");
 						}
 
@@ -609,7 +608,7 @@ public class QS implements CommandCallable{
 				Shop shop = shIt.next();
 
 				try {
-					if (shop.getLocation().getWorld() != null && shop.isSelling() && shop.getRemainingStock() == 0
+					if (shop.getLocation().getExtent() != null && shop.isSelling() && shop.getRemainingStock() == 0
 							&& shop instanceof ContainerShop) {
 						ContainerShop cs = (ContainerShop) shop;
 						if (cs.isDoubleShop())
@@ -755,10 +754,10 @@ public class QS implements CommandCallable{
 			int buying, selling, doubles, chunks, worlds;
 			buying = selling = doubles = chunks = worlds = 0;
 			int nostock = 0;
-			for (HashMap<ShopChunk, HashMap<Location, Shop>> inWorld : plugin.getShopManager().getShops()
+			for (HashMap<ShopChunk, HashMap<Location<World>, Shop>> inWorld : plugin.getShopManager().getShops()
 					.values()) {
 				worlds++;
-				for (HashMap<Location, Shop> inChunk : inWorld.values()) {
+				for (HashMap<Location<World>, Shop> inChunk : inWorld.values()) {
 					chunks++;
 					for (Shop shop : inChunk.values()) {
 						if (shop.isBuying()) {
@@ -774,16 +773,16 @@ public class QS implements CommandCallable{
 					}
 				}
 			}
-			sender.sendMessage(Text.of(Color.RED + "QuickShop Statistics...")));
+			sender.sendMessage(Text.of(Color.RED + "QuickShop Statistics..."));
 			sender.sendMessage(Text.of(Color.GREEN + "" + (buying + selling) + " shops in " + chunks
-					+ " chunks spread over " + worlds + " worlds.")));
-			sender.sendMessage(Text.of(Color.GREEN + "" + doubles + " double shops. ")));
+					+ " chunks spread over " + worlds + " worlds."));
+			sender.sendMessage(Text.of(Color.GREEN + "" + doubles + " double shops. "));
 			sender.sendMessage(Text.of(Color.GREEN + "" + nostock
-					+ " nostock selling shops (excluding doubles) which will be removed by /qs clean.")));
-			sender.sendMessage(Text.of(Color.GREEN + "QuickShop "+QuickShop.getVersion())));
+					+ " nostock selling shops (excluding doubles) which will be removed by /qs clean."));
+			sender.sendMessage(Text.of(Color.GREEN + "QuickShop "+QuickShop.getVersion()));
 		}else {
-			sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission"))));
-		}	
+			sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission")));
+		}
 	}
 
 
@@ -793,7 +792,7 @@ public class QS implements CommandCallable{
 		}
 		ShopManager manager = plugin.getShopManager();
 		try {
-			Shop shop = manager.getShop(new Location(Bukkit.getWorld(args[4]), Integer.parseInt(args[1]),
+			Shop shop = manager.getShop(new Location(Sponge.getServer().getWorld(args[4]).get(), Integer.parseInt(args[1]),
 					Integer.parseInt(args[2]), Integer.parseInt(args[3])));
 			if (shop == null) {
 				sender.sendMessage(Text.of(MsgUtil.getMessage("shop-not-exist")));
@@ -801,7 +800,7 @@ public class QS implements CommandCallable{
 			}
 			if(sender instanceof Player) {
 				Player player = (Player)sender;
-				if(!(shop.getOwner()!=player.getUniqueId())&&!(player.hasPermission("quickshop.other.destroy")))) {
+				if(!(shop.getOwner()!=player.getUniqueId())&&!(player.hasPermission("quickshop.other.destroy"))) {
 					sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission")));
 					return;
 				}
@@ -824,7 +823,7 @@ public class QS implements CommandCallable{
 	 */
 	public Location lookAt(Location loc, Location lookat) {
 		// Clone the loc to prevent applied changes to the input loc
-		loc = loc.clone();
+		loc = loc.copy();
 		// Values of change in distance (make it relative)
 		double dx = lookat.getX() - loc.getX();
 		double dy = lookat.getY() - loc.getY();
@@ -913,6 +912,7 @@ public class QS implements CommandCallable{
 	@Override
 	public CommandResult process(CommandSource source, String arguments) throws CommandException {
 		// TODO Auto-generated method stub
+		// TODO Do process there
 		return null;
 	}
 
