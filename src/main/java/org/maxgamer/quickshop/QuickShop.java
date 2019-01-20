@@ -271,7 +271,7 @@ public class QuickShop {
 					step = "Covert owner to UUID";
 					try {
 						ownerUUID = UUID.fromString(owner);
-					} catch (IllegalArgumentException e) {
+					} catch (IllegalArgumentException ex) {
 //						// This could be old data to be converted... check if it's a player
 //						step = "Update owner to UUID";
 //						// Because need update database, so use crossed method, Set ignore.
@@ -292,7 +292,7 @@ public class QuickShop {
 					Location<World> loc = new Location<World>(world, x, y, z);
 					/* Skip invalid shops, if we know of any */
 					step = "Checking InventoryHolder";
-					if (world != null && Util.canBeShop(loc.getBlock(),null,true) == false) {
+					if (world != null && Util.canBeShop(loc,null,true) == false) {
 						step = "Removeing shop in world: Because it not a correct InventoryHolder";
 						getLogger().info("Shop is not an InventoryHolder in " + rs.getString("world") + " at: " + x
 								+ ", " + y + ", " + z + ".  Deleting.");
@@ -318,7 +318,7 @@ public class QuickShop {
 					}
 					step = "Finish";
 					count++;
-				} catch (Exception e) {
+				} catch (Exception ex) {
 					errors++;
 					getLogger().error("Error loading a shop! Coords: Location[" + worldName + " (" + x + ", " + y
 							+ ", " + z + ")] Item: " + item.getType().getName() + "...");
@@ -327,7 +327,7 @@ public class QuickShop {
 					getLogger().error("===========Error Reporting Start===========");
 					getLogger().error("#Java throw >>");
 					getLogger().error("StackTrace:");
-					e.printStackTrace();
+					ex.printStackTrace();
 					getLogger().error("#Shop data >>");
 					getLogger().error("Location: " + worldName + ";(X:" + x + ", Y:" + y + ", Z:" + z + ")");
 					getLogger().error(
@@ -401,12 +401,12 @@ public class QuickShop {
 								"Multiple errors in shops - Something seems to be wrong with your shops database! Please check it out immediately!");
 						getLogger().info("Removeing shop from database...");
 						DatabaseHelper.removeShop(database, x, y, z, worldName);
-						e.printStackTrace();
+						ex.printStackTrace();
 					}
 				}
 			}
-		} catch (SQLException e) {
-			e.printStackTrace();
+		} catch (SQLException ex) {
+			ex.printStackTrace();
 			getLogger().error("Could not load shops Because SQLException.");
 		}
 		getLogger().info("Loaded " + count + " shops.");
