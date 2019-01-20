@@ -8,7 +8,7 @@ import org.maxgamer.quickshop.Database.*;
 import org.maxgamer.quickshop.Database.Database.ConnectionException;
 import org.maxgamer.quickshop.Economy.Economy;
 import org.maxgamer.quickshop.Economy.EconomyCore;
-import org.maxgamer.quickshop.Economy.Economy_Sponge;
+import org.maxgamer.quickshop.Economy.Economy_Vault;
 import org.maxgamer.quickshop.Listeners.*;
 import org.maxgamer.quickshop.Shop.ContainerShop;
 import org.maxgamer.quickshop.Shop.Shop;
@@ -22,7 +22,6 @@ import org.maxgamer.quickshop.Watcher.UpdateWatcher;
 import org.slf4j.Logger;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.command.CommandManager;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
@@ -30,7 +29,6 @@ import org.spongepowered.api.event.game.state.GameAboutToStartServerEvent;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.util.Color;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.yaml.snakeyaml.Yaml;
@@ -105,8 +103,8 @@ public class QuickShop {
 	private boolean setupDBonEnableding = false;
 	private String dbPrefix="";
 	private Tab commandTabCompleter;
+	private Metrics metrics;
 	private Configuration configuration;
-	private MetricsLite2 metrics;
 	/** 
 	 * Get the Player's Shop limit.
 	 * @return int Player's shop limit
@@ -132,7 +130,7 @@ public class QuickShop {
 		configuration = new Configuration();
 		configuration.setupConfig();
 		getLogger().info("Quickshop Reremake by Ghost_chu(Minecraft SunnySide Server Community)");
-		getLogger().info("THIS VERSION ONLY SUPPORT SPONGE API 7!");
+		getLogger().info("THIS VERSION ONLY SUPPORT BUKKIT API 1.13-1.13.x VERSION!");
 		getLogger().info("Author:Ghost_chu");
 		getLogger().info("Original author:Netherfoam, Timtower, KaiNoMood");
 		getLogger().info("Let's us start load plugin");
@@ -400,20 +398,13 @@ public class QuickShop {
 		
 		if (getConfig().getBoolean("shop.lock")) {
 			LockListener lockListener = new LockListener(this);
-			Sponge.getEventManager().registerListeners(this,lockListener);
+			Bukkit.getServer().getPluginManager().registerEvents(lockListener, this);
 		}
 		// Command handlers
 		commandExecutor = new QS(this);
 		//getCommand("qs").setExecutor(commandExecutor);
-		//String childCommand;
-//		CommandSpec qsCommandSpec = CommandSpec.builder()
-//			    .description(Text.of("QuickShop Main Command"))
-//			    .executor(commandExecutor)
-//			    .build();
-//
-//	    Sponge.getCommandManager().register(this, qsCommandSpec, "qs", "qsshop", "qshop","quickshop","shop");
-	    CommandManager cmdManager = Sponge.getCommandManager();
-	    cmdManager.register(this, commandExecutor, "qs", "qsshop", "qshop","quickshop","shop");
+
+		Sponge.getCommandManager().register(this, commandExecutor, "qs", "shop", "qshop", "qsshop", "quickshop");
 		commandTabCompleter = new Tab(this);
 		Sponge.getEventManager().registerListeners(this,commandTabCompleter);
 		if (getConfig().getInt("shop.find-distance") > 100) {
@@ -449,7 +440,7 @@ public class QuickShop {
 										+ " is not on the correct location and has been removed. Probably someone is trying to cheat.");
 								for (Player player : getServer().getOnlinePlayers()) {
 									if (player.hasPermission("quickshop.alerts")) {
-										player.sendMessage(Color.RED + "[QuickShop] Display item for " + shop
+										player.sendMessage(ChatColor.RED + "[QuickShop] Display item for " + shop
 												+ " is not on the correct location and has been removed. Probably someone is trying to cheat.");
 									}
 								}
@@ -468,7 +459,7 @@ public class QuickShop {
 			String serverVer = Bukkit.getVersion();
 			String bukkitVer = Bukkit.getBukkitVersion();
 			String serverName = Bukkit.getServer().getName();
-			
+			metrics = new Metrics(this);
 			// Use internal Metric class not Maven for solve plugin name issues
 			String display_Items;
 			if (getConfig().getBoolean("shop.display-items")) { // Maybe mod server use this plugin more? Or have big
@@ -753,7 +744,7 @@ public class QuickShop {
 	 */
 	public boolean loadEcon() {
 		try {
-			EconomyCore core = new Economy_Sponge();
+			EconomyCore core = new Economy_Vault();
 			if (core == null || !core.isValid()) {
 				// getLogger().error("Economy is not valid!");
 				getLogger().error("QuickShop could not hook an economy/Not found Vault!");
@@ -902,7 +893,4 @@ public class QuickShop {
     public Configuration getConfiguration() {
 		return configuration;
 	}
-    public void saveDefaultConfig() {
-    	getConfiguration().saveResource("config.yml");
-    }
 }

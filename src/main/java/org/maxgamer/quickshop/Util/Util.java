@@ -1,20 +1,15 @@
 package org.maxgamer.quickshop.Util;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.StringUtilsfigurationException;
-import org.bukkit.configuration.file.YamlC;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.InvalidCononfiguration;
 import org.maxgamer.quickshop.QuickShop;
 import org.maxgamer.quickshop.Shop.DisplayItem;
 import org.maxgamer.quickshop.Shop.Shop;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.tileentity.Sign;
-import org.spongepowered.api.data.manipule;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.item.ItemTypator.mutable.PotionEffectData;
 import org.spongepowered.api.item.enchantment.Enchantment;
 import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.ItemTypes;
@@ -128,7 +123,7 @@ public class Util {
 			if (filtered.startsWith("MemorySection")) {
 				continue;
 			}
-			filtered.replaceAll("&", "§")
+			filtered.replaceAll("&", "§");
 			config.set(key, filtered);
 		}
 	}
