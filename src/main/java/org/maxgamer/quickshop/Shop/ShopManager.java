@@ -12,6 +12,7 @@ import org.maxgamer.quickshop.Database.Database;
 import org.maxgamer.quickshop.Database.DatabaseHelper;
 import org.maxgamer.quickshop.Util.MsgUtil;
 import org.maxgamer.quickshop.Util.Util;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.world.Location;
@@ -494,7 +495,8 @@ public class ShopManager {
 				return;
 			}
 			ShopPurchaseEvent e = new ShopPurchaseEvent(shop, p, amount);
-			Bukkit.getPluginManager().callEvent(e);
+			//Bukkit.getPluginManager().callEvent(e);
+			Sponge.getEventManager().post(e);
 			if (e.isCancelled())
 				return; // Cancelled
 			// Money handling

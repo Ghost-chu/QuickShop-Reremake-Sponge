@@ -1,24 +1,23 @@
 package org.maxgamer.quickshop.Shop;
 
-import org.bukkit.event.Event;
-import org.bukkit.event.HandlerList;
 import org.maxgamer.quickshop.Shop.Shop;
+import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.impl.AbstractEvent;
 
-public class ShopUnloadEvent extends Event{
+public class ShopUnloadEvent extends AbstractEvent{
+	private Cause cause;
 	/**Getting the unloading shop, Can't cancel.**/
-	public ShopUnloadEvent(Shop shop) {
+	public ShopUnloadEvent(Shop shop,Cause cause) {
 		this.shop = shop;
+		this.cause = cause;
 	}
-	private static final HandlerList handlers = new HandlerList();
 	private Shop shop;
 	public Shop getShop() {
 		return shop;
 	}
+
 	@Override
-	public HandlerList getHandlers() {
-		return handlers;
-	}
-	public static HandlerList getHandlerList() {
-		return handlers;
+	public Cause getCause() {
+		return this.cause;
 	}
 }

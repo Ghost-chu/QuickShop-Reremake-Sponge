@@ -1,32 +1,24 @@
 package org.maxgamer.quickshop.Shop;
 
-import org.bukkit.event.Cancellable;
-import org.bukkit.event.Event;
-import org.bukkit.event.HandlerList;
 import org.maxgamer.quickshop.Shop.Shop;
+import org.spongepowered.api.event.Cancellable;
+import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.impl.AbstractEvent;
 
-public class ShopLoadEvent extends Event implements Cancellable {
-	private static final HandlerList handlers = new HandlerList();
+public class ShopLoadEvent extends AbstractEvent implements Cancellable {
 	private boolean cancelled;
 	private Shop shop;
+	private Cause cause;
 
 	/** Getting loading shops **/
 
-	public ShopLoadEvent(Shop shop) {
+	public ShopLoadEvent(Shop shop,Cause cause) {
 		this.shop = shop;
+		this.cause = cause;
 	}
 
 	public Shop getShop() {
 		return shop;
-	}
-
-	@Override
-	public HandlerList getHandlers() {
-		return handlers;
-	}
-
-	public static HandlerList getHandlerList() {
-		return handlers;
 	}
 
 	@Override
@@ -37,6 +29,11 @@ public class ShopLoadEvent extends Event implements Cancellable {
 	@Override
 	public void setCancelled(boolean cancel) {
 		this.cancelled = cancel;
+	}
+
+	@Override
+	public Cause getCause() {
+		return this.cause;
 	}
 
 }

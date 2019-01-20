@@ -1,25 +1,27 @@
 package org.maxgamer.quickshop.Shop;
 
-import org.bukkit.Location;
-import org.bukkit.entity.Player;
-import org.bukkit.event.Cancellable;
-import org.bukkit.event.Event;
-import org.bukkit.event.HandlerList;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.Cancellable;
+import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.impl.AbstractEvent;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
 
 /**
  * This event is called before the shop creation request is sent. E.g. A player
  * clicks a chest, this event is thrown, if successful, the player is asked how
  * much they wish to trade for.
  */
-public class ShopPreCreateEvent extends Event implements Cancellable {
-	private static final HandlerList handlers = new HandlerList();
+public class ShopPreCreateEvent extends AbstractEvent implements Cancellable {
 	private boolean cancelled;
 	private Player p;
-	private Location loc;
+	private Location<World> loc;
+	private Cause cause;
 
-	public ShopPreCreateEvent(Player p, Location loc) {
+	public ShopPreCreateEvent(Player p, Location<World> loc,Cause cause) {
 		this.loc = loc;
 		this.p = p;
+		this.cause = cause;
 	}
 
 	/**
@@ -27,7 +29,7 @@ public class ShopPreCreateEvent extends Event implements Cancellable {
 	 * 
 	 * @return The location of the shop that will be created.
 	 */
-	public Location getLocation() {
+	public Location<World> getLocation() {
 		return loc;
 	}
 
@@ -41,15 +43,6 @@ public class ShopPreCreateEvent extends Event implements Cancellable {
 	}
 
 	@Override
-	public HandlerList getHandlers() {
-		return handlers;
-	}
-
-	public static HandlerList getHandlerList() {
-		return handlers;
-	}
-
-	@Override
 	public boolean isCancelled() {
 		return this.cancelled;
 	}
@@ -57,5 +50,10 @@ public class ShopPreCreateEvent extends Event implements Cancellable {
 	@Override
 	public void setCancelled(boolean cancel) {
 		this.cancelled = cancel;
+	}
+
+	@Override
+	public Cause getCause() {
+		return this.cause;
 	}
 }

@@ -1,23 +1,24 @@
 package org.maxgamer.quickshop.Shop;
 
-import org.bukkit.event.Cancellable;
-import org.bukkit.event.Event;
-import org.bukkit.event.HandlerList;
-import org.bukkit.inventory.ItemStack;
 import org.maxgamer.quickshop.Shop.Shop;
+import org.spongepowered.api.event.Cancellable;
+import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.impl.AbstractEvent;
+import org.spongepowered.api.item.inventory.ItemStack;
 
-public class ShopDisplayItemSpawnEvent extends Event implements Cancellable{
-		private static final HandlerList handlers = new HandlerList();
+public class ShopDisplayItemSpawnEvent extends AbstractEvent implements Cancellable{
 		private boolean cancelled;
 		private Shop shop;
 		private ItemStack iStack;
 		private boolean fakeItem;
+		private Cause cause;
 		/**
 		 * This event is called before the shop display item created
 		 */
-		public ShopDisplayItemSpawnEvent(Shop shop, ItemStack iStack) {
+		public ShopDisplayItemSpawnEvent(Shop shop, ItemStack iStack, Cause cause) {
 			this.shop = shop;
 			this.iStack = iStack;
+			this.cause = cause;
 		}
 		/**
 		 * This event is called before the shop display item created
@@ -34,16 +35,6 @@ public class ShopDisplayItemSpawnEvent extends Event implements Cancellable{
 			return iStack;
 		}
 		public boolean getFakeItem() {return fakeItem;}
-
-		@Override
-		public HandlerList getHandlers() {
-			return handlers;
-		}
-
-		public static HandlerList getHandlerList() {
-			return handlers;
-		}
-
 		@Override
 		public boolean isCancelled() {
 			return this.cancelled;
@@ -52,6 +43,10 @@ public class ShopDisplayItemSpawnEvent extends Event implements Cancellable{
 		@Override
 		public void setCancelled(boolean cancel) {
 			this.cancelled = cancel;
+		}
+		@Override
+		public Cause getCause() {
+			return this.cause;
 		}
 	
 }
