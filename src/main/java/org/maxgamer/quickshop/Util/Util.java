@@ -152,7 +152,7 @@ public class Util {
 	 * @param b The block to check, Possibly a chest, dispenser, etc. player The player, can be null if onlyCheck=true, onlyCheck The option to disable check AreaShop use player.
 	 * @return True if it can be made into a shop, otherwise false.
 	 */
-	public static boolean canBeShop(BlockState b,UUID player, boolean onlyCheck) {
+	public static boolean canBeShop(Location<World> b,UUID player, boolean onlyCheck) {
 		if ((bs instanceof InventoryHolder == false) && b.getType() != BlockTypes.ENDER_CHEST) {
 			return false;
 		}

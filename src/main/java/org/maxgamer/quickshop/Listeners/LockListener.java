@@ -1,23 +1,22 @@
 package org.maxgamer.quickshop.Listeners;
 
-import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.block.Sign;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.maxgamer.quickshop.QuickShop;
 import org.maxgamer.quickshop.Shop.Shop;
 import org.maxgamer.quickshop.Util.MsgUtil;
 import org.maxgamer.quickshop.Util.Util;
+import org.spongepowered.api.block.BlockState;
+import org.spongepowered.api.block.BlockTypes;
+import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.block.ChangeBlockEvent;
+import org.spongepowered.api.event.block.InteractBlockEvent;
+import org.spongepowered.api.event.cause.EventContextKey;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.World;
+import org.yaml.snakeyaml.tokens.WhitespaceToken;
 
-public class LockListener implements Listener {
+public class LockListener {
 	private QuickShop plugin;
 
 	public LockListener(QuickShop plugin) {
@@ -25,29 +24,30 @@ public class LockListener implements Listener {
 	}
 
 	@EventHandler(ignoreCancelled = true)
-	public void onClick(PlayerInteractEvent e) {
-		Block b = e.getClickedBlock();
-		Player p = e.getPlayer();
-		if (e.getAction() != Action.RIGHT_CLICK_BLOCK)
-			return; // Didn't right click it, we dont care.
+	public void onClick(InteractBlockEvent.Secondary e) {
+		Location<World> b = e.getTargetBlock().getLocation().get();
+		Player p = "No Player I Can Get In Event, Sucks";
+//		if (e.getAction() != Action.RIGHT_CLICK_BLOCK)
+//			return; // Didn't right click it, we dont care.
 		if (!Util.canBeShop(b,null,true))
 			return; // Interacted with air
-		Shop shop = plugin.getShopManager().getShop(b.getLocation());
+		Shop shop = plugin.getShopManager().getShop(e.getTargetBlock().getLocation().get());
 		// Make sure they're not using the non-shop half of a double chest.
 		if (shop == null) {
-			b = Util.getSecondHalf(b);
+			b = Util.getSecondHalf(e.getTargetBlock().getLocation().get());
 			if (b == null)
 				return;
-			shop = plugin.getShopManager().getShop(b.getLocation());
+			shop = plugin.getShopManager().getShop(b);
 			if (shop == null)
 				return;
 		}
 		if (!shop.getOwner().equals(p.getUniqueId())) {
 			if (p.hasPermission("quickshop.other.open")) {
-				p.sendMessage(MsgUtil.getMessage("bypassing-lock"));
+				
+				p.sendMessage(Text.of(MsgUtil.getMessage("bypassing-lock")));
 				return;
 			}
-			p.sendMessage(MsgUtil.getMessage("that-is-locked"));
+			p.sendMessage(Text.of(MsgUtil.getMessage("that-is-locked")));
 			e.setCancelled(true);
 			return;
 		}
@@ -56,11 +56,11 @@ public class LockListener implements Listener {
 	/**
 	 * Handles hopper placement
 	 */
-	@EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
-	public void onPlace(BlockPlaceEvent e) {
-		Block b = e.getBlock();
+	@Listener
+	public void onPlace(ChangeBlockEvent.Place e) {
+		Location<World> b = "What the fuck, I can't get block location in event, Sucks API";
 		try {
-			if (b.getType() != Material.HOPPER)
+			if (b.getBlock().getType() != BlockTypes.HOPPER)
 				return;
 		} catch (NoSuchFieldError er) {
 			return; // Your server doesn't have hoppers
@@ -70,18 +70,18 @@ public class LockListener implements Listener {
 			return;
 
 		if (p.hasPermission("quickshop.other.open")) {
-			p.sendMessage(MsgUtil.getMessage("bypassing-lock"));
+			p.sendMessage(Text.of(MsgUtil.getMessage("bypassing-lock")));
 			return;
 		}
-		p.sendMessage(MsgUtil.getMessage("that-is-locked"));
+		p.sendMessage(Text.of(MsgUtil.getMessage("that-is-locked")));
 		e.setCancelled(true);
 	}
 
 	/**
 	 * Removes chests when they're destroyed.
 	 */
-	@EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
-	public void onBreak(BlockBreakEvent e) {
+	@Listener
+	public void onBreak(ChangeBlockEvent.Break e) {
 		Block b = e.getBlock();
 		if(b.getState() instanceof Sign) {
 			Sign sign = (Sign)b.getState();
