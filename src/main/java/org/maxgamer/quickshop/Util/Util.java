@@ -10,11 +10,13 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.tileentity.Sign;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.item.enchantment.Enchantment;
 import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.Inventory;
 import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.service.user.UserStorageService;
 import org.spongepowered.api.util.Color;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -126,6 +128,10 @@ public class Util {
 			filtered.replaceAll("&", "§");
 			config.set(key, filtered);
 		}
+	}
+	public static Optional<User> getOfflinePlayer(UUID uuid) {
+		Optional<UserStorageService> userStorage = Sponge.getServiceManager().provide(UserStorageService.class);
+		return userStorage.get().get(uuid);
 	}
 
 	/**
