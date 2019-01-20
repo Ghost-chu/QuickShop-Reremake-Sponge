@@ -1,37 +1,17 @@
 package org.maxgamer.quickshop.Listeners;
 
-import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.DoubleChest;
-import org.bukkit.block.Hopper;
-import org.bukkit.block.Sign;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.minecart.HopperMinecart;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockExplodeEvent;
-import org.bukkit.event.block.BlockPistonExtendEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.block.BlockRedstoneEvent;
-import org.bukkit.event.entity.EntityChangeBlockEvent;
-import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.inventory.InventoryMoveItemEvent;
-import org.bukkit.event.world.StructureGrowEvent;
 import org.maxgamer.quickshop.QuickShop;
 import org.maxgamer.quickshop.Shop.Info;
 import org.maxgamer.quickshop.Shop.Shop;
 import org.maxgamer.quickshop.Shop.ShopAction;
 import org.maxgamer.quickshop.Util.MsgUtil;
 import org.maxgamer.quickshop.Util.Util;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.advancement.CriterionEvent.Score.Change;
+import org.spongepowered.api.event.block.ChangeBlockEvent;
+import org.spongepowered.api.event.item.inventory.ChangeInventoryEvent;
 
-public class BlockListener implements Listener {
+public class BlockListener {
 	private QuickShop plugin;
 
 	public BlockListener(QuickShop plugin) {
@@ -41,8 +21,8 @@ public class BlockListener implements Listener {
 	/**
 	 * Listens for chest placement, so a doublechest shop can't be created.
 	 */
-	@EventHandler(ignoreCancelled = true)
-	public void onPlace(BlockPlaceEvent e) {
+	@Listener
+	public void onPlace(ChangeBlockEvent.Place e) {
 		BlockState bs = e.getBlock().getState();
 		if (bs instanceof DoubleChest == false)
 			return;
@@ -58,8 +38,8 @@ public class BlockListener implements Listener {
 	/**
 	 * Removes chests when they're destroyed.
 	 */
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onBreak(BlockBreakEvent e) {
+	@Listener
+	public void onBreak(ChangeBlockEvent.Break e) {
 		Block b = e.getBlock();
 		if(b.getState() instanceof Sign) {
 			Sign sign = (Sign)b.getState();
@@ -122,8 +102,8 @@ public class BlockListener implements Listener {
 		}
 	}
 	//Protect Minecart steal shop
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
-	public void onInventoryMove(InventoryMoveItemEvent event){
+	@Listener
+	public void onInventoryMove(ChangeInventoryEvent.Transfer event){
 		if (plugin.getConfig().getBoolean("protect.minecart")){
 				// Additional Hopper Minecart Check
 				if (event.getDestination().getHolder() instanceof HopperMinecart) {
@@ -152,8 +132,8 @@ public class BlockListener implements Listener {
 			}
 		}
 	//Protect Entity pickup shop
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onMobChangeBlock(EntityChangeBlockEvent event) {
+	@Listener
+	public void onMobChangeBlock(ChangeBlockEvent.Break event) {
 			Shop shop = plugin.getShopManager().getShop(event.getBlock().getLocation());
 			if (shop == null) {
 				return;
@@ -170,8 +150,9 @@ public class BlockListener implements Listener {
 		}
 	}
 	//Protect Redstone active shop
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onBlockRedstoneChange(BlockRedstoneEvent event){
+	@Listener
+	/**Need upgrade**/
+	public void onBlockRedstoneChange(Redstone event){
 		if (!plugin.getConfig().getBoolean("protect.redstone")){
 			return;
 		}
@@ -186,8 +167,8 @@ public class BlockListener implements Listener {
 		}
 	}
 	
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onStructureGrow(StructureGrowEvent event){
+	@Listener
+	public void onStructureGrow(ChangeBlockEvent.Grow event){
 		if (!plugin.getConfig().getBoolean("protect.structuregrow")) {
 			return;
 		}
