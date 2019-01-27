@@ -36,6 +36,7 @@ import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Color;
 import org.spongepowered.api.world.Chunk;
 import org.spongepowered.api.world.Location;
@@ -93,7 +94,7 @@ public class QS implements CommandCallable{
 	}
 	private void remove(CommandSource sender, String[] args) {
 		if (sender instanceof Player == false) {
-			sender.sendMessage(Text.of(Color.RED + "Only players may use that command.");
+			sender.sendMessage(Text.of(TextColors.RED + "Only players may use that command.");
 			return;
 		}
 		Player p = (Player) sender;
@@ -105,16 +106,16 @@ public class QS implements CommandCallable{
 				if (shop.getOwner().equals(p.getUniqueId())||sender.hasPermission("quickshop.other.destroy")) {
 					shop.delete();
 				} else {
-					sender.sendMessage(Text.of(Color.RED + MsgUtil.getMessage("no-permission"));
+					sender.sendMessage(Text.of(TextColors.RED + MsgUtil.getMessage("no-permission")));
 				}
 				return;
 			}
 		}
-		p.sendMessage(Text.of(Color.RED + "No shop found!"));
+		p.sendMessage(Text.of(TextColors.RED + "No shop found!"));
 	}
 	private void fetchMessage(CommandSource sender, String[] args) {
 		if (sender instanceof Player == false) {
-			sender.sendMessage(Text.of(Color.RED + "Only players may use that command."));
+			sender.sendMessage(Text.of(TextColors.RED + "Only players may use that command."));
 			return;
 		}
 		Player p = (Player) sender;
@@ -146,7 +147,7 @@ public class QS implements CommandCallable{
 					e.printStackTrace();
 				}
 			} else {
-				sender.sendMessage(Text.of(Color.RED + MsgUtil.getMessage("no-permission")));
+				sender.sendMessage(Text.of(TextColors.RED + MsgUtil.getMessage("no-permission")));
 			}
 			return;
 		}
@@ -154,13 +155,13 @@ public class QS implements CommandCallable{
 	@SuppressWarnings("unused")
 	private void export(CommandSource sender, String[] args) {
 		if (args.length < 2) {
-			sender.sendMessage(Text.of(Color.RED + "Usage: /qs export mysql|sqlite"));
+			sender.sendMessage(Text.of(TextColors.RED + "Usage: /qs export mysql|sqlite"));
 			return;
 		}
 		String type = args[1].toLowerCase();
 		if (type.startsWith("mysql")) {
 			if (plugin.getDB().getCore() instanceof MySQLCore) {
-				sender.sendMessage(Text.of(Color.RED + "Database is already MySQL"));
+				sender.sendMessage(Text.of(TextColors.RED + "Database is already MySQL"));
 				return;
 			}
 			ConfigurationSection cfg = plugin.getConfig().getConfigurationSection("database");
@@ -174,39 +175,39 @@ public class QS implements CommandCallable{
 			try {
 				target = new Database(core);
 				QuickShop.instance.getDB().copyTo(target);
-				sender.sendMessage(Text.of(Color.GREEN + "Success - Exported to MySQL " + user + "@" + host + "." + name));
+				sender.sendMessage(Text.of(TextColors.GREEN + "Success - Exported to MySQL " + user + "@" + host + "." + name));
 			} catch (Exception e) {
 				e.printStackTrace();
-				sender.sendMessage(Text.of(Color.RED + "Failed to export to MySQL " + user + "@" + host + "." + name
-						+ Color.RED + " Reason: " + e.getMessage()));
+				sender.sendMessage(Text.of(TextColors.RED + "Failed to export to MySQL " + user + "@" + host + "." + name
+						+ TextColors.RED + " Reason: " + e.getMessage()));
 			}
 			return;
 		}
 		if (type.startsWith("sql") || type.contains("file")) {
 			if (plugin.getDB().getCore() instanceof SQLiteCore) {
-				sender.sendMessage(Text.of(Color.RED + "Database is already SQLite"));
+				sender.sendMessage(Text.of(TextColors.RED + "Database is already SQLite"));
 				return;
 			}
 			File file = new File(plugin.getConfiguration().getDataFolder(), "shops.db");
 			if (file.exists()) {
 				if (file.delete() == false) {
 					sender.sendMessage(Text.of(
-							Color.RED + "Warning: Failed to delete old shops.db file. This may cause errors."));
+							TextColors.RED + "Warning: Failed to delete old shops.db file. This may cause errors."));
 				}
 			}
 			SQLiteCore core = new SQLiteCore(file);
 			try {
 				Database target = new Database(core);
 				QuickShop.instance.getDB().copyTo(target);
-				sender.sendMessage(Text.of(Color.GREEN + "Success - Exported to SQLite: " + file.toString()));
+				sender.sendMessage(Text.of(TextColors.GREEN + "Success - Exported to SQLite: " + file.toString()));
 			} catch (Exception e) {
 				e.printStackTrace();
-				sender.sendMessage(Text.of(Color.RED + "Failed to export to SQLite: " + file.toString() + " Reason: "
+				sender.sendMessage(Text.of(TextColors.RED + "Failed to export to SQLite: " + file.toString() + " Reason: "
 						+ e.getMessage()));
 			}
 			return;
 		}
-		sender.sendMessage(Text.of(Color.RED + "No target given. Usage: /qs export mysql|sqlite");
+		sender.sendMessage(Text.of(TextColors.RED + "No target given. Usage: /qs export mysql|sqlite");
 	}
 	private void setOwner(CommandSource sender, String[] args) {
 		if (sender instanceof Player && sender.hasPermission("quickshop.setowner")) {
@@ -359,6 +360,8 @@ public class QS implements CommandCallable{
 			return;
 		}
 	}
+	
+	
 	private void create(CommandSource sender, String[] args) {
 		if (sender instanceof Player) {
 			Player p = (Player) sender;
@@ -773,13 +776,13 @@ public class QS implements CommandCallable{
 					}
 				}
 			}
-			sender.sendMessage(Text.of(Color.RED + "QuickShop Statistics..."));
-			sender.sendMessage(Text.of(Color.GREEN + "" + (buying + selling) + " shops in " + chunks
+			sender.sendMessage(Text.of(TextColors.RED + "QuickShop Statistics..."));
+			sender.sendMessage(Text.of(TextColors.GREEN + "" + (buying + selling) + " shops in " + chunks
 					+ " chunks spread over " + worlds + " worlds."));
-			sender.sendMessage(Text.of(Color.GREEN + "" + doubles + " double shops. "));
-			sender.sendMessage(Text.of(Color.GREEN + "" + nostock
+			sender.sendMessage(Text.of(TextColors.GREEN + "" + doubles + " double shops. "));
+			sender.sendMessage(Text.of(TextColors.GREEN + "" + nostock
 					+ " nostock selling shops (excluding doubles) which will be removed by /qs clean."));
-			sender.sendMessage(Text.of(Color.GREEN + "QuickShop "+QuickShop.getVersion()));
+			sender.sendMessage(Text.of(TextColors.GREEN + "QuickShop "+QuickShop.getVersion()));
 		}else {
 			sender.sendMessage(Text.of(MsgUtil.getMessage("no-permission")));
 		}
@@ -865,46 +868,46 @@ public class QS implements CommandCallable{
 
 		s.sendMessage(Text.of(MsgUtil.getMessage("command.description.title")));
 		if (s.hasPermission("quickshop.unlimited"))
-			s.sendMessage(Text.of(Color.GREEN + "/qs unlimited" + Color.YELLOW + " - "
+			s.sendMessage(Text.of(TextColors.GREEN + "/qs unlimited" + TextColors.YELLOW + " - "
 					+ MsgUtil.getMessage("command.description.unlimited")));
 		if (s.hasPermission("quickshop.setowner"))
-			s.sendMessage(Text.of(Color.GREEN + "/qs setowner <player>" + Color.YELLOW + " - "
+			s.sendMessage(Text.of(TextColors.GREEN + "/qs setowner <player>" + TextColors.YELLOW + " - "
 					+ MsgUtil.getMessage("command.description.setowner")));
 		if (s.hasPermission("quickshop.create.buy"))
-			s.sendMessage(Text.of(Color.GREEN + "/qs buy" + Color.YELLOW + " - "
+			s.sendMessage(Text.of(TextColors.GREEN + "/qs buy" + TextColors.YELLOW + " - "
 					+ MsgUtil.getMessage("command.description.buy")));
 		if (s.hasPermission("quickshop.create.sell")) {
-			s.sendMessage(Text.of(Color.GREEN + "/qs sell" + Color.YELLOW + " - "
+			s.sendMessage(Text.of(TextColors.GREEN + "/qs sell" + TextColors.YELLOW + " - "
 					+ MsgUtil.getMessage("command.description.sell")));
-			s.sendMessage(Text.of(Color.GREEN + "/qs create [price]" + Color.YELLOW + " - "
+			s.sendMessage(Text.of(TextColors.GREEN + "/qs create [price]" + TextColors.YELLOW + " - "
 					+ MsgUtil.getMessage("command.description.create")));
 		}
 		if (s.hasPermission("quickshop.create.changeprice"))
-			s.sendMessage(Text.of(Color.GREEN + "/qs price" + Color.YELLOW + " - "
+			s.sendMessage(Text.of(TextColors.GREEN + "/qs price" + TextColors.YELLOW + " - "
 					+ MsgUtil.getMessage("command.description.price")));
 		if (s.hasPermission("quickshop.clean"))
-			s.sendMessage(Text.of(Color.GREEN + "/qs clean" + Color.YELLOW + " - "
+			s.sendMessage(Text.of(TextColors.GREEN + "/qs clean" + TextColors.YELLOW + " - "
 					+ MsgUtil.getMessage("command.description.clean")));
 		if (s.hasPermission("quickshop.find"))
-			s.sendMessage(Text.of(Color.GREEN + "/qs find <item>" + Color.YELLOW + " - "
+			s.sendMessage(Text.of(TextColors.GREEN + "/qs find <item>" + TextColors.YELLOW + " - "
 					+ MsgUtil.getMessage("command.description.find")));
 		if (s.hasPermission("quickshop.refill"))
-			s.sendMessage(Text.of(Color.GREEN + "/qs refill <amount>" + Color.YELLOW + " - "
+			s.sendMessage(Text.of(TextColors.GREEN + "/qs refill <amount>" + TextColors.YELLOW + " - "
 					+ MsgUtil.getMessage("command.description.refill")));
 		if (s.hasPermission("quickshop.empty"))
-			s.sendMessage(Text.of(Color.GREEN + "/qs empty" + Color.YELLOW + " - "
+			s.sendMessage(Text.of(TextColors.GREEN + "/qs empty" + TextColors.YELLOW + " - "
 					+ MsgUtil.getMessage("command.description.empty")));
 		if (s.hasPermission("quickshop.fetchmessage"))
-			s.sendMessage(Text.of(Color.GREEN + "/qs fetchmessage" + Color.YELLOW + " - "
+			s.sendMessage(Text.of(TextColors.GREEN + "/qs fetchmessage" + TextColors.YELLOW + " - "
 					+ MsgUtil.getMessage("command.description.fetchmessage")));
 		if (s.hasPermission("quickshop.info"))
-			s.sendMessage(Text.of(Color.GREEN + "/qs info" + Color.YELLOW + " - "
+			s.sendMessage(Text.of(TextColors.GREEN + "/qs info" + TextColors.YELLOW + " - "
 					+ MsgUtil.getMessage("command.description.info")));
 		if (s.hasPermission("quickshop.debug"))
-			s.sendMessage(Text.of(Color.GREEN + "/qs debug" + Color.YELLOW + " - "
+			s.sendMessage(Text.of(TextColors.GREEN + "/qs debug" + TextColors.YELLOW + " - "
 					+ MsgUtil.getMessage("command.description.debug")));
 //		if (s.hasPermission("quickshop.export"))
-//			s.sendMessage(Text.of(Color.GREEN + "/qs export mysql|sqlite" + Color.YELLOW + " - "
+//			s.sendMessage(Text.of(TextColors.GREEN + "/qs export mysql|sqlite" + TextColors.YELLOW + " - "
 //					+ MsgUtil.getMessage("command.description.export"));
 	}
 

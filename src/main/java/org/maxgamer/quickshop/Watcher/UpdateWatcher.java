@@ -2,6 +2,7 @@ package org.maxgamer.quickshop.Watcher;
 
 import org.maxgamer.quickshop.QuickShop;
 import org.maxgamer.quickshop.Util.Updater;
+import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Color;
 
 public class UpdateWatcher implements Listener {
@@ -37,9 +38,9 @@ public class UpdateWatcher implements Listener {
 			@Override
 			public void run() {
 				if (e.getPlayer().hasPermission("quickshop.alert") && hasNewUpdate) {
-					e.getPlayer().sendMessage(Color.GREEN + "New QuickShop released, now updated on SpigotMC.org!");
+					e.getPlayer().sendMessage(TextColors.GREEN + "New QuickShop released, now updated on SpigotMC.org!");
 					e.getPlayer().sendMessage(
-							Color.GREEN + "Update here: https://www.spigotmc.org/resources/62575/");
+							TextColors.GREEN + "Update here: https://www.spigotmc.org/resources/62575/");
 				}
 
 			}

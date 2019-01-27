@@ -8,6 +8,7 @@ import java.net.URL;
 import javax.net.ssl.HttpsURLConnection;
 
 import org.maxgamer.quickshop.QuickShop;
+import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Color;
 
 
@@ -38,7 +39,7 @@ public class Updater {
             connection.disconnect();
             return false;
         } catch (IOException e) {
-           System.out.println(Color.RED + "[QuickShop] Failed to check for an update on SpigotMC.org! Maybe internet issue or SpigotMC host down. If you want disable update checker, you can disable in config.yml, but we still high-recommand check update on SpigotMC.org.");
+           System.out.println(TextColors.RED + "[QuickShop] Failed to check for an update on SpigotMC.org! Maybe internet issue or SpigotMC host down. If you want disable update checker, you can disable in config.yml, but we still high-recommand check update on SpigotMC.org.");
             return false;
         }
     }

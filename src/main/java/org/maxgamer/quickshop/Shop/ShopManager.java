@@ -327,7 +327,7 @@ public class ShopManager {
 				
 				int max = plugin.getShopLimit(p);
 				if (owned + 1 > max) {
-					//p.sendMessage(ChatColor.RED + "You have already created a maximum of " + owned + "/" + max + " shops!");
+					//p.sendMessage(TextColors.RED + "You have already created a maximum of " + owned + "/" + max + " shops!");
 					p.sendMessage(Text.of(MsgUtil.getMessage("reached-maximum-can-create", String.valueOf(owned),String.valueOf(max))));
 					return false;
 					
@@ -355,7 +355,7 @@ public class ShopManager {
 	}
 
 	public void handleChat(final Player p, String msg) {
-		final String message = ChatColor.stripColor(msg);
+		final String message = TextColors.stripColor(msg);
 		// Use from the main thread, because Bukkit hates life
 				HashMap<UUID, Info> actions = getActions();
 				// They wanted to do something.
@@ -608,7 +608,7 @@ public class ShopManager {
 			Entry<Double, Double> priceRestriction = Util.getPriceRestriction(info.getItem().getType());
 			if (priceRestriction != null) {
 				if (price < priceRestriction.getKey() || price > priceRestriction.getValue()) {
-					// p.sendMessage(ChatColor.RED+"Restricted prices for
+					// p.sendMessage(TextColors.RED+"Restricted prices for
 					// "+info.getItem().getType()+": min "+priceRestriction.getKey()+", max
 					// "+priceRestriction.getValue());
 					p.sendMessage(Text.of(MsgUtil.getMessage("restricted-prices", MsgUtil.getDisplayName(info.getItem()),

@@ -657,7 +657,7 @@ public class Util {
 			Itemenchs = null;
 		}
 		if(Itemname!=MsgUtil.getItemi18n(itemStack.getType().getName())) {
-			finalItemdata = Itemname+" "+Color.GRAY+"("+MsgUtil.getItemi18n(itemStack.getType().name())+Color.GRAY+")";
+			finalItemdata = Itemname+" "+TextColors.GRAY+"("+MsgUtil.getItemi18n(itemStack.getType().name())+TextColors.GRAY+")";
 		}else {
 			finalItemdata = Itemname;
 		}
@@ -668,7 +668,7 @@ public class Util {
 		a.addAll(Itemenchs.keySet());
 		b.addAll(Itemenchs.values());
 		for (int i = 0; i < a.size(); i++) {
-			finalItemdata += Color.GRAY + a.get(i) + " " + Util.formatEnchLevel(b.get(i)) + "\n";
+			finalItemdata += TextColors.GRAY + a.get(i) + " " + Util.formatEnchLevel(b.get(i)) + "\n";
 		}
 		
 		String potionResult = getPotiondata(itemStack);
@@ -678,7 +678,7 @@ public class Util {
 
 		if (Itemlore != null) {
 			for (String string : Itemlore) {
-				finalItemdata += Color.DARK_MAGENTA +"" + string + "\n";
+				finalItemdata += TextColors.DARK_MAGENTA +"" + string + "\n";
 			}
 		}
 		TextComponent normalmessage = new TextComponent(normalText+"   "+MsgUtil.getMessage("menu.preview"));
@@ -719,9 +719,9 @@ public class Util {
 //		Optional<PotionEffectData> pMeta = iStack.get(PotionEffectData.class);
 //		if(pMeta.get().getType()!=null) {
 //			if(!(pMeta.getBasePotionData().isUpgraded())){
-//				pEffects.add(Color.BLUE+MsgUtil.getPotioni18n(pMeta.getBasePotionData().getType().getEffectType()));
+//				pEffects.add(TextColors.BLUE+MsgUtil.getPotioni18n(pMeta.getBasePotionData().getType().getEffectType()));
 //			}else {
-//				pEffects.add(Color.BLUE+MsgUtil.getPotioni18n(pMeta.getBasePotionData().getType().getEffectType())+" II");
+//				pEffects.add(TextColors.BLUE+MsgUtil.getPotioni18n(pMeta.getBasePotionData().getType().getEffectType())+" II");
 //			}
 //			
 //		}

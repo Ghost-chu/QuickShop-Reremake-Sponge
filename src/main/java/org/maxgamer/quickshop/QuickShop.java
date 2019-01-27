@@ -457,7 +457,7 @@ public class QuickShop {
 										+ " is not on the correct location and has been removed. Probably someone is trying to cheat.");
 								for (Player player : getServer().getOnlinePlayers()) {
 									if (player.hasPermission("quickshop.alerts")) {
-										player.sendMessage(Text.of(Color.RED + "[QuickShop] Display item for " + shop
+										player.sendMessage(Text.of(TextColors.RED + "[QuickShop] Display item for " + shop
 												+ " is not on the correct location and has been removed. Probably someone is trying to cheat."));
 									}
 								}

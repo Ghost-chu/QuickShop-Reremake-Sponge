@@ -18,6 +18,8 @@ import org.maxgamer.quickshop.QuickShop;
 import org.maxgamer.quickshop.Database.DatabaseHelper;
 import org.maxgamer.quickshop.Shop.Shop;
 import org.spongepowered.api.command.CommandSource;
+import org.spongepowered.api.data.key.Key;
+import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.effect.potion.PotionEffectType;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
@@ -25,6 +27,7 @@ import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.enchantment.Enchantment;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.Color;
 
 public class MsgUtil {
@@ -163,16 +166,16 @@ public class MsgUtil {
 					return;
 		sender.sendMessage("");
 		sender.sendMessage("");
-		sender.sendMessage(Color.DARK_MAGENTA + "+---------------------------------------------------+");
-		sender.sendMessage(Color.DARK_MAGENTA + "| " + MsgUtil.getMessage("controlpanel.infomation"));
+		sender.sendMessage(TextColors.DARK_PURPLE + "+---------------------------------------------------+");
+		sender.sendMessage(TextColors.DARK_PURPLE + "| " + MsgUtil.getMessage("controlpanel.infomation"));
 		// Owner
 		if (!sender.hasPermission("quickshop.setowner")) {
-			sender.sendMessage(Color.DARK_MAGENTA + "| " + MsgUtil.getMessage("menu.owner", shop.ownerName()));
+			sender.sendMessage(TextColors.DARK_PURPLE + "| " + MsgUtil.getMessage("menu.owner", shop.ownerName()));
 		} else {
 			String Text = MsgUtil.getMessage("controlpanel.setowner",shop.ownerName());
 			String hoverText = MsgUtil.getMessage("controlpanel.setowner-hover");
 			String clickCommand = "/qs setowner [Player]";
-			TextComponent message = new TextComponent(Color.DARK_MAGENTA + "| " + Text);
+			TextComponent message = new TextComponent(TextColors.DARK_PURPLE + "| " + Text);
 			message.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, clickCommand));
 			message.setHoverEvent(
 					new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(hoverText).create()));
@@ -210,7 +213,7 @@ public class MsgUtil {
 			String Text = MsgUtil.getMessage("controlpanel.price", String.valueOf(shop.getPrice()));
 			String hoverText = MsgUtil.getMessage("controlpanel.mode-buying-hover");
 			String clickCommand = "/qs price [New Price]";
-			TextComponent message = new TextComponent(Color.DARK_MAGENTA + "| " + Text);
+			TextComponent message = new TextComponent(TextColors.DARK_PURPLE + "| " + Text);
 			message.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, clickCommand));
 			message.setHoverEvent(
 					new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(hoverText).create()));
@@ -221,7 +224,7 @@ public class MsgUtil {
 			String Text = MsgUtil.getMessage("controlpanel.refill", String.valueOf(shop.getPrice()));
 			String hoverText = MsgUtil.getMessage("controlpanel.refill-hover");
 			String clickCommand = "/qs refill [Amount]";
-			TextComponent message = new TextComponent(Color.DARK_MAGENTA + "| " + Text);
+			TextComponent message = new TextComponent(TextColors.DARK_PURPLE + "| " + Text);
 			message.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, clickCommand));
 			message.setHoverEvent(
 					new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(hoverText).create()));
@@ -246,19 +249,19 @@ public class MsgUtil {
 			MsgUtil.sendPanelMessage(sender, Text, hoverText, clickCommand);
 		}
 
-		sender.sendMessage(Color.DARK_MAGENTA + "+---------------------------------------------------+");
+		sender.sendMessage(TextColors.DARK_PURPLE + "+---------------------------------------------------+");
 	}
 	public static void sendPanelMessage(CommandSender sender, String Text,String hoverText, String clickCommand) {
-		TextComponent message = new TextComponent(Color.DARK_MAGENTA + "| " + Text);
+		TextComponent message = new TextComponent(TextColors.DARK_PURPLE + "| " + Text);
         message.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, clickCommand));
         message.setHoverEvent(new HoverEvent (HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(hoverText).create()));
         sender.spigot().sendMessage(message);
 	}
 	public static String bool2String(boolean bool) {
 		if(bool) {
-			return Color.GREEN + "✔";
+			return TextColors.GREEN + "✔";
 		}else {
-			return Color.RED + "✘";
+			return TextColors.RED + "✘";
 		}
 	}
 
@@ -522,37 +525,37 @@ public class MsgUtil {
 		ItemStack items = shop.getItem();
 		p.sendMessage(Text.of(""));
 		p.sendMessage(Text.of(""));
-		p.sendMessage(Text.of(Color.DARK_MAGENTA + "+---------------------------------------------------+"));
-		p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + MsgUtil.getMessage("menu.shop-information")));
-		p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + MsgUtil.getMessage("menu.owner", shop.ownerName())));
+		p.sendMessage(Text.of(TextColors.DARK_PURPLE + "+---------------------------------------------------+"));
+		p.sendMessage(Text.of(TextColors.DARK_PURPLE + "| " + MsgUtil.getMessage("menu.shop-information")));
+		p.sendMessage(Text.of(TextColors.DARK_PURPLE + "| " + MsgUtil.getMessage("menu.owner", shop.ownerName())));
 		//Enabled
-		Util.sendItemholochat(shop.getItem(),p,Color.DARK_MAGENTA + "| " + MsgUtil.getMessage("menu.item", MsgUtil.getDisplayName(shop.getItem())));
+		Util.sendItemholochat(shop.getItem(),p,TextColors.DARK_PURPLE + "| " + MsgUtil.getMessage("menu.item", MsgUtil.getDisplayName(shop.getItem())));
 		if (Util.isTool(items.getType())) {
-			p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + MsgUtil.getMessage("menu.damage-percent-remaining", Util.getToolPercentage(items))));
+			p.sendMessage(Text.of(TextColors.DARK_PURPLE + "| " + MsgUtil.getMessage("menu.damage-percent-remaining", Util.getToolPercentage(items))));
 		}
 		if (shop.isSelling()) {
 			if(shop.getRemainingStock()==-1) {
-				p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + MsgUtil.getMessage("menu.stock", "" +  MsgUtil.getMessage("signs.unlimited"))));
+				p.sendMessage(Text.of(TextColors.DARK_PURPLE + "| " + MsgUtil.getMessage("menu.stock", "" +  MsgUtil.getMessage("signs.unlimited"))));
 			}else {
-				p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + MsgUtil.getMessage("menu.stock", "" + shop.getRemainingStock())));
+				p.sendMessage(Text.of(TextColors.DARK_PURPLE + "| " + MsgUtil.getMessage("menu.stock", "" + shop.getRemainingStock())));
 			}
 		} else {
 			if(shop.getRemainingSpace()==-1) {
-				p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + MsgUtil.getMessage("menu.space", "" + MsgUtil.getMessage("signs.unlimited"))));
+				p.sendMessage(Text.of(TextColors.DARK_PURPLE + "| " + MsgUtil.getMessage("menu.space", "" + MsgUtil.getMessage("signs.unlimited"))));
 			}else {
-			p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + MsgUtil.getMessage("menu.space", "" + shop.getRemainingSpace())));
+			p.sendMessage(Text.of(TextColors.DARK_PURPLE + "| " + MsgUtil.getMessage("menu.space", "" + shop.getRemainingSpace())));
 		}}
-		p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + MsgUtil.getMessage("menu.price-per", MsgUtil.getItemi18n(shop.getDataName()),Util.format(shop.getPrice()))));
+		p.sendMessage(Text.of(TextColors.DARK_PURPLE + "| " + MsgUtil.getMessage("menu.price-per", MsgUtil.getItemi18n(shop.getDataName()),Util.format(shop.getPrice()))));
 		if (shop.isBuying()) {
-			p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + MsgUtil.getMessage("menu.this-shop-is-buying")));
+			p.sendMessage(Text.of(TextColors.DARK_PURPLE + "| " + MsgUtil.getMessage("menu.this-shop-is-buying")));
 		} else {
-			p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + MsgUtil.getMessage("menu.this-shop-is-selling")));
+			p.sendMessage(Text.of(TextColors.DARK_PURPLE + "| " + MsgUtil.getMessage("menu.this-shop-is-selling")));
 		}
 		Map<Enchantment, Integer> enchs = items.getItemMeta().getEnchants();
 		if (enchs != null && !enchs.isEmpty()) {
-			p.sendMessage(Text.of(Color.DARK_MAGENTA + "+--------------------" + MsgUtil.getMessage("menu.enchants") + "-----------------------+"));
+			p.sendMessage(Text.of(TextColors.DARK_PURPLE + "+--------------------" + MsgUtil.getMessage("menu.enchants") + "-----------------------+"));
 			for (Entry<Enchantment, Integer> entries : enchs.entrySet()) {
-				p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + Color.YELLOW + MsgUtil.getEnchi18n(entries.getKey()) + " " + entries.getValue()));
+				p.sendMessage(Text.of(TextColors.DARK_PURPLE + "| " + TextColors.YELLOW + MsgUtil.getEnchi18n(entries.getKey()) + " " + entries.getValue()));
 			}
 		}
 			if (items.getItemMeta() instanceof EnchantmentStorageMeta) {
@@ -560,31 +563,31 @@ public class MsgUtil {
 				stor.getStoredEnchants();
 				enchs = stor.getStoredEnchants();
 				if (enchs != null && !enchs.isEmpty()) {
-					p.sendMessage(Text.of(Color.DARK_MAGENTA + "+-----------------" + MsgUtil.getMessage("menu.stored-enchants") + "--------------------+"));
+					p.sendMessage(Text.of(TextColors.DARK_PURPLE + "+-----------------" + MsgUtil.getMessage("menu.stored-enchants") + "--------------------+"));
 					for (Entry<Enchantment, Integer> entries : enchs.entrySet()) {
-						p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + Color.YELLOW + MsgUtil.getEnchi18n(entries.getKey()) + " " + entries.getValue()));
+						p.sendMessage(Text.of(TextColors.DARK_PURPLE + "| " + TextColors.YELLOW + MsgUtil.getEnchi18n(entries.getKey()) + " " + entries.getValue()));
 					}
 				}
 			}
-		p.sendMessage(Text.of(Color.DARK_MAGENTA + "+---------------------------------------------------+"));
+		p.sendMessage(Text.of(TextColors.DARK_PURPLE + "+---------------------------------------------------+"));
 	}
 
 	public static void sendPurchaseSuccess(Player p, Shop shop, int amount) {
-		p.sendMessage(Text.of(Color.DARK_MAGENTA + "+---------------------------------------------------+"));
-		p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + MsgUtil.getMessage("menu.successful-purchase")));
-		p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + MsgUtil.getMessage("menu.item-name-and-price", "" + amount, MsgUtil.getDisplayName(shop.getItem()), Util.format((amount * shop.getPrice())))));
+		p.sendMessage(Text.of(TextColors.DARK_PURPLE + "+---------------------------------------------------+"));
+		p.sendMessage(Text.of(TextColors.DARK_PURPLE + "| " + MsgUtil.getMessage("menu.successful-purchase")));
+		p.sendMessage(Text.of(TextColors.DARK_PURPLE + "| " + MsgUtil.getMessage("menu.item-name-and-price", "" + amount, MsgUtil.getDisplayName(shop.getItem()), Util.format((amount * shop.getPrice())))));
 		Map<Enchantment, Integer> enchs = shop.getItem().getItemMeta().getEnchants();
 		if (enchs != null && !enchs.isEmpty()) {
-			p.sendMessage(Text.of(Color.DARK_MAGENTA + "+--------------------" + MsgUtil.getMessage("menu.enchants") + "-----------------------+"));
+			p.sendMessage(Text.of(TextColors.DARK_PURPLE + "+--------------------" + MsgUtil.getMessage("menu.enchants") + "-----------------------+"));
 			for (Entry<Enchantment, Integer> entries : enchs.entrySet()) {
-				p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + Color.YELLOW +MsgUtil.getEnchi18n(entries.getKey())));
+				p.sendMessage(Text.of(TextColors.DARK_PURPLE + "| " + TextColors.YELLOW +MsgUtil.getEnchi18n(entries.getKey())));
 			}
 		}
 		enchs = shop.getItem().getItemMeta().getEnchants();
 		if (enchs != null && !enchs.isEmpty()) {
-			p.sendMessage(Text.of(Color.DARK_MAGENTA + "+-----------------" + MsgUtil.getMessage("menu.stored-enchants") + "--------------------+"));
+			p.sendMessage(Text.of(TextColors.DARK_PURPLE + "+-----------------" + MsgUtil.getMessage("menu.stored-enchants") + "--------------------+"));
 			for (Entry<Enchantment, Integer> entries : enchs.entrySet()) {
-				p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + Color.YELLOW + MsgUtil.getEnchi18n(entries.getKey()) + " " + entries.getValue()));
+				p.sendMessage(Text.of(TextColors.DARK_PURPLE + "| " + TextColors.YELLOW + MsgUtil.getEnchi18n(entries.getKey()) + " " + entries.getValue()));
 			}
 		}
 		try {
@@ -594,9 +597,9 @@ public class MsgUtil {
 				stor.getStoredEnchants();
 				enchs = stor.getStoredEnchants();
 				if (enchs != null && !enchs.isEmpty()) {
-					p.sendMessage(Text.of(Color.DARK_MAGENTA + "+-----------------" + MsgUtil.getMessage("menu.stored-enchants") + "--------------------+"));
+					p.sendMessage(Text.of(TextColors.DARK_PURPLE + "+-----------------" + MsgUtil.getMessage("menu.stored-enchants") + "--------------------+"));
 					for (Entry<Enchantment, Integer> entries : enchs.entrySet()) {
-						p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + Color.YELLOW +MsgUtil.getEnchi18n(entries.getKey())));
+						p.sendMessage(Text.of(TextColors.DARK_PURPLE + "| " + TextColors.YELLOW +MsgUtil.getEnchi18n(entries.getKey())));
 					}
 				}
 			}
@@ -604,29 +607,29 @@ public class MsgUtil {
 			// They don't have an up to date enough build of CB to do this.
 			// TODO: Remove this when it becomes redundant
 		}
-		p.sendMessage(Text.of(Color.DARK_MAGENTA + "+---------------------------------------------------+"));
+		p.sendMessage(Text.of(TextColors.DARK_PURPLE + "+---------------------------------------------------+"));
 	}
 
 	public static void sendSellSuccess(Player p, Shop shop, int amount) {
-		p.sendMessage(Text.of(Color.DARK_MAGENTA + "+---------------------------------------------------+"));
-		p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + MsgUtil.getMessage("menu.successfully-sold")));
-		p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + MsgUtil.getMessage("menu.item-name-and-price", "" + amount, MsgUtil.getDisplayName(shop.getItem()), Util.format((amount * shop.getPrice())))));
+		p.sendMessage(Text.of(TextColors.DARK_PURPLE + "+---------------------------------------------------+"));
+		p.sendMessage(Text.of(TextColors.DARK_PURPLE + "| " + MsgUtil.getMessage("menu.successfully-sold")));
+		p.sendMessage(Text.of(TextColors.DARK_PURPLE + "| " + MsgUtil.getMessage("menu.item-name-and-price", "" + amount, MsgUtil.getDisplayName(shop.getItem()), Util.format((amount * shop.getPrice())))));
 		if (plugin.getConfig().getBoolean("show-tax")) {
 			double tax = plugin.getConfig().getDouble("tax");
 			double total = amount * shop.getPrice();
 			if (tax != 0) {
 				if (!p.getUniqueId().equals(shop.getOwner())) {
-					p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + MsgUtil.getMessage("menu.sell-tax", "" + Util.format((tax * total)))));
+					p.sendMessage(Text.of(TextColors.DARK_PURPLE + "| " + MsgUtil.getMessage("menu.sell-tax", "" + Util.format((tax * total)))));
 				} else {
-					p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + MsgUtil.getMessage("menu.sell-tax-self")));
+					p.sendMessage(Text.of(TextColors.DARK_PURPLE + "| " + MsgUtil.getMessage("menu.sell-tax-self")));
 				}
 			}
 		}
 		Map<Enchantment, Integer> enchs = shop.getItem().getItemMeta().getEnchants();
 		if (enchs != null && !enchs.isEmpty()) {
-			p.sendMessage(Text.of(Color.DARK_MAGENTA + "+--------------------" + MsgUtil.getMessage("menu.enchants") + "-----------------------+"));
+			p.sendMessage(Text.of(TextColors.DARK_PURPLE + "+--------------------" + MsgUtil.getMessage("menu.enchants") + "-----------------------+"));
 			for (Entry<Enchantment, Integer> entries : enchs.entrySet()) {
-				p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + Color.YELLOW +MsgUtil.getEnchi18n(entries.getKey())));
+				p.sendMessage(Text.of(TextColors.DARK_PURPLE + "| " + TextColors.YELLOW +MsgUtil.getEnchi18n(entries.getKey())));
 			}
 		}
 		try {
@@ -636,9 +639,9 @@ public class MsgUtil {
 				stor.getStoredEnchants();
 				enchs = stor.getStoredEnchants();
 				if (enchs != null && !enchs.isEmpty()) {
-					p.sendMessage(Text.of(Color.DARK_MAGENTA + "+--------------------" + MsgUtil.getMessage("menu.stored-enchants") + "-----------------------+"));
+					p.sendMessage(Text.of(TextColors.DARK_PURPLE + "+--------------------" + MsgUtil.getMessage("menu.stored-enchants") + "-----------------------+"));
 					for (Entry<Enchantment, Integer> entries : enchs.entrySet()) {
-						p.sendMessage(Text.of(Color.DARK_MAGENTA + "| " + Color.YELLOW +MsgUtil.getEnchi18n(entries.getKey())));
+						p.sendMessage(Text.of(TextColors.DARK_PURPLE + "| " + TextColors.YELLOW +MsgUtil.getEnchi18n(entries.getKey())));
 					}
 				}
 			}
@@ -646,7 +649,7 @@ public class MsgUtil {
 			// They don't have an up to date enough build of CB to do this.
 			// TODO: Remove this when it becomes redundant
 		}
-		p.sendMessage(Text.of(Color.DARK_MAGENTA + "+---------------------------------------------------+"));
+		p.sendMessage(Text.of(TextColors.DARK_PURPLE + "+---------------------------------------------------+"));
 	}
 	/**
 	 * Get item's displayname.
@@ -654,8 +657,6 @@ public class MsgUtil {
 	 * @return String itemDisplayName
 	 */
 	public static String getDisplayName(ItemStack iStack){
-		ItemStack is = iStack.copy();
-		
 		if(is.hasItemMeta()&&is.getItemMeta().hasDisplayName()) {
 			return is.getItemMeta().getDisplayName();
 		}else {

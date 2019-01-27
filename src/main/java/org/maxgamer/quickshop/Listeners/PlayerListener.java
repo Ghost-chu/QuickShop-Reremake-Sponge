@@ -34,9 +34,9 @@ public class PlayerListener implements Listener {
 	 * Could be useful one day private LinkedList<String> getParents(Class<?>
 	 * clazz){ LinkedList<String> classes = new LinkedList<String>();
 	 * 
-	 * while(clazz != null){ classes.add("Extends " + ChatColor.GREEN +
+	 * while(clazz != null){ classes.add("Extends " + TextColors.GREEN +
 	 * clazz.getCanonicalName()); for(Class<?> iface : clazz.getInterfaces()){
-	 * classes.add("Implements " + ChatColor.RED + iface.getCanonicalName());
+	 * classes.add("Implements " + TextColors.RED + iface.getCanonicalName());
 	 * classes.addAll(getParents(iface)); }
 	 * 
 	 * clazz = clazz.getSuperclass(); } return classes; }

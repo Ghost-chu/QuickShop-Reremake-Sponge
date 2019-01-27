@@ -1,6 +1,6 @@
 package org.maxgamer.quickshop.Listeners;
 
-import org.bukkit.ChatColor;
+import org.bukkit.TextColors;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.Event.Result;
@@ -146,7 +146,7 @@ public class DisplayProtectionListener implements Listener {
 				e.getPlayer().getInventory().setItemInMainHand(new ItemStack(Material.AIR,0));
 				// You shouldn't be able to pick up that...
 				plugin.getLogger().warning("[Exploit Alert] A QuickShop item found in "+e.getPlayer().getName()+"'s inventory"+" Deleteing...");
-				Util.sendMessageToOps(ChatColor.RED+"[QuickShop][Exploit alert] A QuickShop item found in "+e.getPlayer().getName()+"'s inventory"+" Deleteing...");
+				Util.sendMessageToOps(TextColors.RED+"[QuickShop][Exploit alert] A QuickShop item found in "+e.getPlayer().getName()+"'s inventory"+" Deleteing...");
 				Util.inventoryCheck(e.getPlayer().getInventory());
 			}
 			if (DisplayItem.checkShopItem(stackOffHand)) {
@@ -166,7 +166,7 @@ public class DisplayProtectionListener implements Listener {
 			if (itemStackCheck(event.getCurrentItem()) || itemStackCheck(event.getCursor())) {
 				event.setCancelled(true);
 				plugin.getLogger().warning("[Exploit alert] "+event.getWhoClicked().getName()+" had a QuickShop display item on inventory: "+event.getInventory().getType()+":"+event.getView().getTitle());
-				Util.sendMessageToOps(ChatColor.RED+"[QuickShop][Exploit alert] "+event.getWhoClicked().getName()+" had a QuickShop display item on inventory: "+event.getInventory().getType()+":"+event.getView().getTitle());
+				Util.sendMessageToOps(TextColors.RED+"[QuickShop][Exploit alert] "+event.getWhoClicked().getName()+" had a QuickShop display item on inventory: "+event.getInventory().getType()+":"+event.getView().getTitle());
 				event.getCursor().setAmount(0);
 				event.getCursor().setType(Material.AIR);
 				event.getCurrentItem().setAmount(0);
@@ -185,7 +185,7 @@ public class DisplayProtectionListener implements Listener {
 			if (itemStackCheck(is)) {
 				event.setCancelled(true);
 //				plugin.getLogger().warning("[Exploit alert] Inventory "+event.getInventory().getName()+" at "+event.getItem().getLocation()+" picked up display item "+is);
-//				Util.sendMessageToOps(ChatColor.RED+"[QuickShop][Exploit alert] Inventory "+event.getView().getTitle()+" at "+event.getItem().getLocation()+" picked up display item "+is);
+//				Util.sendMessageToOps(TextColors.RED+"[QuickShop][Exploit alert] Inventory "+event.getView().getTitle()+" at "+event.getItem().getLocation()+" picked up display item "+is);
 				Util.debugLog("Something trying collect QuickShop displayItem, already cancelled. ("+event.getInventory().getLocation().toString()+")");
 				event.getItem().remove();
 				Util.inventoryCheck(event.getInventory());

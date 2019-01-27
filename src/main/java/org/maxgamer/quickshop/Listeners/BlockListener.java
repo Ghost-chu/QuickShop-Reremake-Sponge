@@ -116,7 +116,7 @@ public class BlockListener {
 					event.setCancelled(true);
 					hm.remove();
 					plugin.getLogger().warning("[Exploit Alert] a HopperMinecart tried to move the item of "+shop);
-					Util.sendMessageToOps(ChatColor.RED+"[QuickShop][Exploit alert] A HopperMinecart tried to move the item of "+shop);
+					Util.sendMessageToOps(TextColors.RED+"[QuickShop][Exploit alert] A HopperMinecart tried to move the item of "+shop);
 					}
 				}
 		if(plugin.getConfig().getBoolean("protect.hopper")) {
@@ -143,7 +143,7 @@ public class BlockListener {
 				event.setCancelled(true);
 				event.getEntity().remove();
 				plugin.getLogger().warning("[Exploit Alert] a Entity tried to break the shop of "+shop);
-				Util.sendMessageToOps(ChatColor.RED+"[QuickShop][Exploit alert] A Entity tried to break the shop of "+shop);
+				Util.sendMessageToOps(TextColors.RED+"[QuickShop][Exploit alert] A Entity tried to break the shop of "+shop);
 				}else {	
 				shop.delete();
 			}			
@@ -163,7 +163,7 @@ public class BlockListener {
 		if (shop != null){
 			event.setNewCurrent(event.getOldCurrent());
 			plugin.getLogger().warning("[Exploit Alert] a Redstone tried to active of "+shop);
-			Util.sendMessageToOps(ChatColor.RED+"[QuickShop][Exploit alert] A Redstone tried to active of "+shop);
+			Util.sendMessageToOps(TextColors.RED+"[QuickShop][Exploit alert] A Redstone tried to active of "+shop);
 		}
 	}
 	
@@ -180,7 +180,7 @@ public class BlockListener {
 			if(shop !=null) {
 				event.setCancelled(true);
 				plugin.getLogger().warning("[Exploit Alert] a StructureGrowing tried to break the shop of "+shop);
-				Util.sendMessageToOps(ChatColor.RED+"[QuickShop][Exploit alert] A StructureGrowing tried to break the shop of "+shop);
+				Util.sendMessageToOps(TextColors.RED+"[QuickShop][Exploit alert] A StructureGrowing tried to break the shop of "+shop);
 			}
 				
 		}
@@ -198,7 +198,7 @@ public class BlockListener {
 				if(plugin.getConfig().getBoolean("protect.explode")) {
 					e.setCancelled(true);
 					plugin.getLogger().warning("[Exploit Alert] a EntityExplode tried to break the shop of "+shop);
-					Util.sendMessageToOps(ChatColor.RED+"[QuickShop][Exploit alert] A EntityExplode tried to break the shop of "+shop);
+					Util.sendMessageToOps(TextColors.RED+"[QuickShop][Exploit alert] A EntityExplode tried to break the shop of "+shop);
 				}else {
 					shop.delete();
 				}
@@ -214,7 +214,7 @@ public class BlockListener {
 				if(plugin.getConfig().getBoolean("protect.explode")) {
 					e.setCancelled(true);
 					plugin.getLogger().warning("[Exploit Alert] a BlockExplode tried to break the shop of "+shop);
-					Util.sendMessageToOps(ChatColor.RED+"[QuickShop][Exploit alert] A BlockExplode tried to break the shop of "+shop);
+					Util.sendMessageToOps(TextColors.RED+"[QuickShop][Exploit alert] A BlockExplode tried to break the shop of "+shop);
 				}else {
 					shop.delete();
 				}
@@ -232,7 +232,7 @@ public class BlockListener {
 		if (shop != null) {
 			event.setCancelled(true);
 			plugin.getLogger().warning("[Exploit Alert] a piston tried to move the item on top of "+shop);
-			Util.sendMessageToOps(ChatColor.RED+"[QuickShop][Exploit alert] A piston tried to move the item on top of "+shop);
+			Util.sendMessageToOps(TextColors.RED+"[QuickShop][Exploit alert] A piston tried to move the item on top of "+shop);
 			return;
 		}
 		
@@ -243,7 +243,7 @@ public class BlockListener {
 				if (shop!=null) {
 					event.setCancelled(true);
 					plugin.getLogger().warning("[Exploit Alert] a piston tried to move the item on top of "+shop);
-					Util.sendMessageToOps(ChatColor.RED+"[QuickShop][Exploit alert] A piston tried to move the item on top of "+shop);
+					Util.sendMessageToOps(TextColors.RED+"[QuickShop][Exploit alert] A piston tried to move the item on top of "+shop);
 					return;
 				}
 			}
